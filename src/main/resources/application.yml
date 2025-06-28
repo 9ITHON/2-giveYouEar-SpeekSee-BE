@@ -9,16 +9,16 @@ spring:
       - optional:file:.env[.properties]
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/speeksee
+    url: jdbc:postgresql://localhost:5432/maruni
     driver-class-name: org.postgresql.Driver
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
-#  data:
-#    redis:
-#      host: redis
-#      port: 6379
-#      password: ${REDIS_PASSWORD}
+  #  data:
+  #    redis:
+  #      host: redis
+  #      port: 6379
+  #      password: ${REDIS_PASSWORD}
 
   jpa:
     hibernate:
