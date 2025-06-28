@@ -9,7 +9,7 @@ spring:
       - optional:file:.env[.properties]
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/maruni
+    url: jdbc:postgresql://localhost:5432/speeksee
     driver-class-name: org.postgresql.Driver
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
