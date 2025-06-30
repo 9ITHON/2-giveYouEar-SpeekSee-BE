@@ -19,12 +19,18 @@ public class OpenAiChatClient implements LlmClient {
 
 	private final WebClient openAiWebClient;
 
+	/**
+	 * GPT-4o 모델을 사용하여 주어진 프롬프트에 대한 응답을 생성합니다.
+	 *
+	 * @param prompt 사용자로부터 받은 입력 프롬프트
+	 * @return GPT-4o 모델의 응답 내용
+	 */
 	@Override
 	public String chat(String prompt) {
 		Map<String, Object> requestBody = Map.of(
 			"model", "gpt-4o",
 			"messages", new Object[] {
-				Map.of("role", "system", "content", "너는 친절한 노인 돌봄 비서야."),
+				Map.of("role", "system", "content", ""),
 				Map.of("role", "user", "content", prompt)
 			},
 			"max_tokens", 100
