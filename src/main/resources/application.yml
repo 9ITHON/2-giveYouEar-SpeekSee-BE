@@ -45,6 +45,6 @@ springdoc:
   swagger-ui:
     path: /api-docs
 
-#openai:
-#  api:
-#    key: ${OPENAI_API_KEY}
+openai:
+  api:
+    key: ${OPENAI_API_KEY}
