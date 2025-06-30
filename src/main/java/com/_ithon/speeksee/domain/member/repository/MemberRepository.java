@@ -9,7 +9,7 @@ import com._ithon.speeksee.domain.member.entity.Member;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
-	Optional<Member> findByMemberEmail(String email);
+	Optional<Member> findByEmail(String email);
 
 	// 이메일 중복 확인
 	boolean existsByEmail(String email);

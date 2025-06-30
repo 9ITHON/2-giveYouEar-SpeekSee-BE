@@ -42,15 +42,12 @@ public class Member {
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 
-	@Column(nullable = false)
 	private String currentLevel;
 
-	@Column(nullable = false)
 	private Integer totalExp;
 
 	private LocalDate lastLogin;
 
-	@Column(nullable = false)
 	private Integer consecutiveDays;
 
 	@PrePersist // 엔티티를 처음 저장할 때
