@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com._ithon.speeksee.global.infra.exception.code.ErrorCode;
 import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 
 import jakarta.persistence.EntityNotFoundException;

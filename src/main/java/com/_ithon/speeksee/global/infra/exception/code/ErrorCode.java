@@ -1,4 +1,4 @@
-package com._ithon.speeksee.global.infra.exception;
+package com._ithon.speeksee.global.infra.exception.code;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

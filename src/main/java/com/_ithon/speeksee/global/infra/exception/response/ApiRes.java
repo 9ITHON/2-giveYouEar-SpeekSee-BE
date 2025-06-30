@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.http.HttpStatus;
 
-import com._ithon.speeksee.global.infra.exception.ErrorCode;
+import com._ithon.speeksee.global.infra.exception.code.ErrorCode;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
