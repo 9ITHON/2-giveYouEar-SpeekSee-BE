@@ -9,7 +9,11 @@ import com._ithon.speeksee.domain.Script.entity.DifficultyLevel;
 import com._ithon.speeksee.domain.Script.entity.Script;
 import com._ithon.speeksee.domain.Script.entity.ScriptCategory;
 import com._ithon.speeksee.domain.Script.service.ScriptService;
+import com._ithon.speeksee.global.infra.response.ApiRes;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -19,8 +23,17 @@ public class ScriptController {
 
 	private final ScriptService scriptService;
 
+	@Operation(summary = "대본 생성", description = "카테고리와 난이도를 받아 대본을 생성합니다.")
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "대본 생성 성공"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청"),
+		@ApiResponse(responseCode = "401", description = "인증 실패"),
+		@ApiResponse(responseCode = "500", description = "서버 오류")
+	})
 	@PostMapping("/generate")
-	public Script generateScript(@RequestParam ScriptCategory category, @RequestParam DifficultyLevel difficulty) {
-		return scriptService.createScript(category, difficulty);
+	public ApiRes<Script> generateScript(@RequestParam ScriptCategory category,
+		@RequestParam DifficultyLevel difficulty) {
+		Script script = scriptService.createScript(category, difficulty);
+		return ApiRes.success(script);
 	}
 }
