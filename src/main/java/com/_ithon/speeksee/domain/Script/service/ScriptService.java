@@ -2,9 +2,9 @@ package com._ithon.speeksee.domain.Script.service;
 
 import org.springframework.stereotype.Service;
 
-import com._ithon.speeksee.domain.Script.entity.DifficultyLevel;
-import com._ithon.speeksee.domain.Script.entity.Script;
-import com._ithon.speeksee.domain.Script.entity.ScriptCategory;
+import com._ithon.speeksee.domain.Script.domain.DifficultyLevel;
+import com._ithon.speeksee.domain.Script.domain.Script;
+import com._ithon.speeksee.domain.Script.domain.ScriptCategory;
 import com._ithon.speeksee.domain.Script.port.LlmClient;
 import com._ithon.speeksee.domain.Script.repository.ScriptRepository;
 
