@@ -1,0 +1,51 @@
+# 📄 application-prod.yml
+
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: prod
+  config:
+    import:
+      - optional:file:.env[.properties]
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/speeksee
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  #  data:
+  #    redis:
+  #      host: redis
+  #      port: 6379
+  #      password: ${REDIS_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+cookie:
+  secure: true
+
+#jwt:
+#  secret: ${JWT_SECRET_KEY}
+#  access-token-expiration: ${JWT_ACCESS_EXPIRATION}
+#  refresh-token-expiration: ${JWT_REFRESH_EXPIRATION}
+
+logging:
+  level:
+    root: info
+
+springdoc:
+  swagger-ui:
+    path: /api-docs
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY}
