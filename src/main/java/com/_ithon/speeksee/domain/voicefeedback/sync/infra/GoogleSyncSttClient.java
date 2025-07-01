@@ -55,7 +55,8 @@ public class GoogleSyncSttClient implements SyncSttClient {
 				SpeechRecognitionAlternative alternative = result.getAlternatives(0);
 				resultList.add(new TranscriptResult(
 					alternative.getTranscript(),
-					alternative.getConfidence()
+					alternative.getConfidence(),
+					true //임시
 				));
 			}
 		}
