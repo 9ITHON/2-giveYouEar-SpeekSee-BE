@@ -1,10 +1,10 @@
-package com._ithon.speeksee.domain.voicefeedback.port;
+package com._ithon.speeksee.domain.voicefeedback.sync.port;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com._ithon.speeksee.domain.voicefeedback.dto.response.TranscriptResult;
+import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.TranscriptResult;
 
 public interface SyncSttClient {
 

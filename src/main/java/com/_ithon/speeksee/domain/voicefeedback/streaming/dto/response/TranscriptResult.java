@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.streaming.service.port.dto.response;
+package com._ithon.speeksee.domain.voicefeedback.streaming.dto.response;
 
 /**
  * 음성 인식 결과를 나타내는 DTO 클래스입니다.

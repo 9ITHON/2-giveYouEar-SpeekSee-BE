@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.infra;
+package com._ithon.speeksee.domain.voicefeedback.streaming.infra;
 
 import java.io.IOException;
 import java.util.Map;
@@ -9,7 +9,9 @@ import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import com._ithon.speeksee.domain.voicefeedback.port.StreamingSttClient;
+import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.TranscriptResult;
+import com._ithon.speeksee.domain.voicefeedback.streaming.port.StreamingSttClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.gax.rpc.ClientStream;
 import com.google.api.gax.rpc.ResponseObserver;
 import com.google.api.gax.rpc.StreamController;
@@ -35,6 +37,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	private static final int SAMPLE_RATE = 16000;
 
 	private final SpeechClient speechClient;
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	// 세션 ID → 요청 스트림
 	private final Map<String, ClientStream<StreamingRecognizeRequest>> streamMap = new ConcurrentHashMap<>();
@@ -63,12 +66,23 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 				@Override
 				public void onResponse(StreamingRecognizeResponse response) {
 					for (StreamingRecognitionResult result : response.getResultsList()) {
+						if (!result.getIsFinal()) {
+							return; // interim result는 무시
+						}
+
 						if (result.getAlternativesCount() > 0) {
 							String transcript = result.getAlternatives(0).getTranscript();
-							log.info("[{}] 인식 결과: {}", session.getId(), transcript);
+							float confidence = result.getAlternatives(0).getConfidence();
+
+							TranscriptResult dto = TranscriptResult.builder()
+								.transcript(transcript)
+								.confidence(confidence)
+								.isFinal(true)
+								.build();
 
 							try {
-								session.sendMessage(new TextMessage(transcript));
+								String json = objectMapper.writeValueAsString(dto);
+								session.sendMessage(new TextMessage(json));
 							} catch (IOException e) {
 								log.error("[{}] WebSocket 응답 전송 실패", session.getId(), e);
 							}

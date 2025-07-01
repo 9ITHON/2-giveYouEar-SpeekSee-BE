@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.infra;
+package com._ithon.speeksee.domain.voicefeedback.sync.infra;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,8 +8,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com._ithon.speeksee.domain.voicefeedback.dto.response.TranscriptResult;
-import com._ithon.speeksee.domain.voicefeedback.port.SyncSttClient;
+import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.TranscriptResult;
+import com._ithon.speeksee.domain.voicefeedback.sync.port.SyncSttClient;
 import com.google.cloud.speech.v1.RecognitionAudio;
 import com.google.cloud.speech.v1.RecognitionConfig;
 import com.google.cloud.speech.v1.RecognizeResponse;

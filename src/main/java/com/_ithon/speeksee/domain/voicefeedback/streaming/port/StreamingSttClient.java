@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.port;
+package com._ithon.speeksee.domain.voicefeedback.streaming.port;
 
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;

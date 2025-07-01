@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.service;
+package com._ithon.speeksee.domain.voicefeedback.sync.service;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,8 +6,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com._ithon.speeksee.domain.voicefeedback.dto.response.TranscriptResult;
-import com._ithon.speeksee.domain.voicefeedback.port.SyncSttClient;
+import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.TranscriptResult;
+import com._ithon.speeksee.domain.voicefeedback.sync.port.SyncSttClient;
 
 import lombok.RequiredArgsConstructor;
 
