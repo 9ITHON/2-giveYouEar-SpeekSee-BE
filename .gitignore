@@ -107,3 +107,8 @@ $RECYCLE.BIN/
 .gradle/
 build/
 .idea/
+
+# Google Cloud service account key
+# 또는 더 명확하게
+/credentials/
+*.json
