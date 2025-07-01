@@ -1,11 +1,11 @@
-package com._ithon.speeksee.domain.voicefeedback.config;
+package com._ithon.speeksee.domain.voicefeedback.streaming.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
-import com._ithon.speeksee.domain.voicefeedback.controller.SttSocketHandler;
+import com._ithon.speeksee.domain.voicefeedback.streaming.controller.SttSocketHandler;
 
 import lombok.RequiredArgsConstructor;
 
