@@ -1,88 +1,93 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.5.3'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'org.springframework.boot' version '3.5.3'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'com.9ithon'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	// === Spring Boot 스타터 의존성 ===
+    // === Spring Boot 스타터 의존성 ===
 
-	// Spring Web (Controller, RestController 등 웹 어플리케이션 기본 구성)
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    // Spring Web (Controller, RestController 등 웹 어플리케이션 기본 구성)
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
-	// Spring Data JPA (ORM, Repository 등 DB 연동 기능 제공)
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // Spring Data JPA (ORM, Repository 등 DB 연동 기능 제공)
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
-	// Spring Security (인증/인가 기능 제공)
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-
-
-	// === Redis 관련 의존성 ===
-
-	// Spring Data Redis (Redis 연동 기능 제공)
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-
-	// Redis 커넥션 풀을 위한 commons-pool2
-	implementation 'org.apache.commons:commons-pool2'
-
-	// === Spring Security 관련 의존성 ===
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	testImplementation 'org.springframework.security:spring-security-test'
-
-	// JWT (JSON Web Token) 관련 라이브러리
-	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
-	implementation 'io.jsonwebtoken:jjwt-impl:0.12.5'
-	implementation 'io.jsonwebtoken:jjwt-jackson:0.12.5'
-
-	// OAuth2 클라이언트 (소셜 로그인 등 외부 인증 제공자와의 연동)
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-
-	// === API 문서화 및 유효성 검사 ===
-
-	// Swagger(OpenAPI) 문서 자동 생성
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
-
-	// Hibernate Validator (Bean Validation을 위한 의존성)
-	implementation 'org.hibernate.validator:hibernate-validator'
+    // Spring Security (인증/인가 기능 제공)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 
 
-	// === DB 드라이버 ===
+    // === Redis 관련 의존성 ===
 
-	// PostgreSQL 드라이버 (JPA와 연동되는 실DB 연결용)
-	runtimeOnly 'org.postgresql:postgresql'
+    // Spring Data Redis (Redis 연동 기능 제공)
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // Redis 커넥션 풀을 위한 commons-pool2
+    implementation 'org.apache.commons:commons-pool2'
+
+    // === Spring Security 관련 의존성 ===
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    // JWT (JSON Web Token) 관련 라이브러리
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
+    // OAuth2 클라이언트 (소셜 로그인 등 외부 인증 제공자와의 연동)
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+    // === API 문서화 및 유효성 검사 ===
+
+    // Swagger(OpenAPI) 문서 자동 생성
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
+
+    // Hibernate Validator (Bean Validation을 위한 의존성)
+    implementation 'org.hibernate.validator:hibernate-validator'
 
 
-	// === 개발 편의성 ===
+    // === DB 드라이버 ===
 
-	// Lombok (코드 자동 생성 - getter/setter 등)
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-
-	// 개발 중 핫 리로딩 지원 (자동 재시작)
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    // PostgreSQL 드라이버 (JPA와 연동되는 실DB 연결용)
+    runtimeOnly 'org.postgresql:postgresql'
 
 
-	// === 테스트 의존성 ===
+    // === Google Cloud 관련 의존성 ===
 
-	// Spring Boot 테스트 기능 (JUnit, MockMvc 등 포함)
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
+    // Google Cloud Speech-to-Text (음성 인식)
+    implementation 'com.google.cloud:google-cloud-speech:4.31.0'
+
+    // === 개발 편의성 ===
+
+    // Lombok (코드 자동 생성 - getter/setter 등)
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // 개발 중 핫 리로딩 지원 (자동 재시작)
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+
+    // === 테스트 의존성 ===
+
+    // Spring Boot 테스트 기능 (JUnit, MockMvc 등 포함)
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
