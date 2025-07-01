@@ -71,6 +71,9 @@ dependencies {
     // Google Cloud Speech-to-Text (음성 인식)
     implementation 'com.google.cloud:google-cloud-speech:4.31.0'
 
+    // websocket (실시간 통신을 위한 의존성)
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
     // === 개발 편의성 ===
 
     // Lombok (코드 자동 생성 - getter/setter 등)
