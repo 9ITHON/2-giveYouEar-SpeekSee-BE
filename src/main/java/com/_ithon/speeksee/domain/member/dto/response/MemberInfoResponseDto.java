@@ -36,4 +36,14 @@ public class MemberInfoResponseDto {
 	@Schema(description = "계정 생성일시", example = "2025-06-20T10:00:00Z", required = false)
 	private final LocalDateTime createdAt;  // 로그인 시점에는 null이어도 됨
 
+	public MemberInfoResponseDto(Member member) {
+		this.userId = member.getId();
+		this.email = member.getEmail();
+		this.username = member.getUsername();
+		this.currentLevel = member.getCurrentLevel();
+		this.totalExp = member.getTotalExp();
+		this.consecutiveDays = member.getConsecutiveDays();
+		this.createdAt = member.getCreatedAt();
+	}
+
 }
