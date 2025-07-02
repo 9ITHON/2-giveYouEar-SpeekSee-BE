@@ -1,3 +1,4 @@
+# 📄 application.yml
 spring:
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE}
+    active: ${SPRING_PROFILES_ACTIVE:dev}
