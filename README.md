@@ -85,3 +85,11 @@ global: 공통 설정, 유틸리티 등
 
 45-fix/로그인-버그수정
 ```
+---
+1. `google-stt-key.json` 파일을 `credentials/` 디렉토리에 수동으로 복사해주세요.
+   > 키 파일은 보안을 위해 Git에 포함되지 않습니다. 팀원에게 직접 요청하세요.
+
+2. 아래 환경변수를 등록하거나 IDE에서 설정해주세요:
+
+```bash
+GOOGLE_APPLICATION_CREDENTIALS=./credentials/google-stt-key.json
