@@ -109,3 +109,9 @@ build/
 .idea/
 
 credentials/
+
+# Include gradle wrapper jar explicitly
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+!gradlew
+!gradlew.bat
