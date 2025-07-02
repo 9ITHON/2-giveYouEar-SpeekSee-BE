@@ -3,6 +3,8 @@ package com._ithon.speeksee.domain.member.entity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com._ithon.speeksee.global.entity.BaseTimeEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
@@ -23,11 +25,11 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Member {
+public class Member extends BaseTimeEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "user_id")
+	@Column(name = "member_id")
 	private Long id;
 
 	@Column(nullable = false, unique = true)
@@ -39,24 +41,11 @@ public class Member {
 	@Column(nullable = false)
 	private String passwordHash;
 
-	private LocalDateTime createdAt;
-	private LocalDateTime updatedAt;
+	private String currentLevel ="초급";
 
-	private String currentLevel;
-
-	private Integer totalExp;
+	private Integer totalExp = 0;
 
 	private LocalDate lastLogin;
 
 	private Integer consecutiveDays;
-
-	@PrePersist // 엔티티를 처음 저장할 때
-	protected void onCreate() {
-		createdAt = updatedAt = LocalDateTime.now();
-	}
-
-	@PreUpdate // 엔티티 수정 시
-	protected void onUpdate() {
-		updatedAt = LocalDateTime.now();
-	}
 }
