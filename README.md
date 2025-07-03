@@ -70,7 +70,7 @@ global: 공통 설정, 유틸리티 등
 
 ---
 
-## 4. 브랜치 컨벤션
+4. 브랜치 컨벤션
 
 브랜치는 이슈 번호와 연결하여 생성
 
@@ -85,11 +85,61 @@ global: 공통 설정, 유틸리티 등
 
 45-fix/로그인-버그수정
 ```
+
+# 🎯 Google Cloud Speech-to-Text 키 설정 가이드
+
+> 이 문서는 `SpeekSee` 백엔드 프로젝트에서 Google Cloud Speech-to-Text API를 사용하기 위한 **로컬 개발 환경 설정 방법**을 안내합니다.
+
 ---
-1. `google-stt-key.json` 파일을 `credentials/` 디렉토리에 수동으로 복사해주세요.
-   > 키 파일은 보안을 위해 Git에 포함되지 않습니다. 팀원에게 직접 요청하세요.
 
-2. 아래 환경변수를 등록하거나 IDE에서 설정해주세요:
+## ✅ 1. 키 파일 요청 및 저장
 
-```bash
+- `google-stt-key.json`, `OPENAI_API_KEY` 파일을 팀에게 **직접 요청**하세요.
+- 이 키 파일은 **보안상 Git에 포함되지 않으며**, 외부 공유 금지입니다.
+- 받은 파일은 다음 경로에 저장해주세요:
+
+```
+<프로젝트 루트>/credentials/google-stt-key.json
+```
+
+예시:
+
+```
+C:/Users/yourname/coding/SpeekSee/credentials/google-stt-key.json
+```
+
+> 📁 `credentials/` 디렉토리는 `.gitignore`에 포함되어 있습니다.
+
+---
+
+## ✅ 3. IntelliJ 환경변수 등록
+
+Google API는 `GOOGLE_APPLICATION_CREDENTIALS` 환경변수를 통해 인증합니다.
+
+### IntelliJ 설정 방법:
+
+1. 메뉴에서 `Run > Edit Configurations` 클릭
+2. 실행 대상 (`SpeekseeApplication`) 선택
+3. `Modify options` → `Environment variables` 활성화
+4. 아래 값 입력:
+
+```
 GOOGLE_APPLICATION_CREDENTIALS=./credentials/google-stt-key.json
+```
+
+> 상대 경로 `./credentials/...`는 프로젝트 루트 기준입니다.
+
+---
+
+## ✅ 4. 설정 확인 방법
+
+아래 코드로 설정이 잘 되었는지 확인할 수 있습니다:
+
+```java
+System.out.println(System.getenv("GOOGLE_APPLICATION_CREDENTIALS"));
+```
+
+정상적으로 경로가 출력되면 인증 준비 완료입니다.
+
+---
+

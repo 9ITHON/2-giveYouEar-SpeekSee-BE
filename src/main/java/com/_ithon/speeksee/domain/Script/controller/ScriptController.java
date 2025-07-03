@@ -5,9 +5,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com._ithon.speeksee.domain.Script.entity.DifficultyLevel;
-import com._ithon.speeksee.domain.Script.entity.Script;
-import com._ithon.speeksee.domain.Script.entity.ScriptCategory;
+import com._ithon.speeksee.domain.Script.domain.DifficultyLevel;
+import com._ithon.speeksee.domain.Script.domain.Script;
+import com._ithon.speeksee.domain.Script.domain.ScriptCategory;
 import com._ithon.speeksee.domain.Script.service.ScriptService;
 import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 
