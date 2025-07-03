@@ -1,0 +1,47 @@
+name: Deploy Spring Boot to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up SSH key
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > ec2_key.pem
+          chmod 600 ec2_key.pem
+
+      - name: Add .env file to server
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+          scp -i ec2_key.pem -o StrictHostKeyChecking=no .env ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/2-giveYouEar-SpeekSee-BE/.env
+
+      - name: Deploy to EC2
+        run: |
+          ssh -i ec2_key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd /home/ubuntu/2-giveYouEar-SpeekSee-BE
+            git pull origin main
+
+            ./gradlew build -x test
+
+            JAR_FILE=$(find build/libs -name "*.jar" | head -n 1)
+            echo "Starting JAR: $JAR_FILE"
+
+            # 실행 중인 앱 종료 (기존 PID가 있다면 kill)
+            PID=$(pgrep -f 'speeksee-.*\.jar')
+            if [ -n "$PID" ]; then
+              echo "Stopping existing application (PID=$PID)"
+              kill -9 $PID
+            fi
+
+            # 백그라운드 실행
+            nohup java -jar "$JAR_FILE" > app.log 2>&1 &
+            echo "✅ Application started"
+          EOF
