@@ -30,6 +30,7 @@ public class MemberService {
 			.consecutiveDays(member.getConsecutiveDays())
 			.createdAt(member.getCreatedAt())
 			.build();
+	}
 
 	public Member findByEmail(String email) {
 		return memberRepository.findByEmail(email)
