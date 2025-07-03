@@ -50,6 +50,11 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	// 세션 ID → 요청 스트림
 	private final Map<String, SttSessionContext> sessionMap = new ConcurrentHashMap<>();
 
+	// 개발용 더미 스크립트
+	private final String dummyScript = "안녕하세요 오늘 날씨는 맑습니다";
+	private final List<String> scriptWords = List.of(dummyScript.split(" "));
+
+
 	/**
 	 * Google Cloud Speech-to-Text 클라이언트를 초기화합니다.
 	 * <p>
@@ -106,15 +111,51 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 							return;
 						}
 
+						log.info("[{}] >>> STT 응답 (final: {}): {}", session.getId(), isFinal, transcript);
+						var alt = result.getAlternatives(0);
 
+						if (alt.getWordsCount() == 0) {
+							log.warn("[{}] ⚠ wordsList 비어 있음", session.getId());
+						} else {
+							log.info("[{}] wordsList 개수: {}", session.getId(), alt.getWordsCount());
+
+							for (var word : alt.getWordsList()) {
+								log.info("[{}] 단어='{}', start={}s, end={}s, hasStartTime={}, hasEndTime={}",
+									session.getId(),
+									word.getWord(),
+									word.getStartTime().getSeconds() + word.getStartTime().getNanos() / 1e9,
+									word.getEndTime().getSeconds() + word.getEndTime().getNanos() / 1e9,
+									word.hasStartTime(),
+									word.hasEndTime()
+								);
+							}
+						}
+
+						// 🛑 interim이면 word info가 없을 수 있으므로 skip (테스트용)
+						if (!isFinal) {
+							log.debug("[{}] interim 결과 → word info 생략 가능", session.getId());
+							continue;
+						}
 
 						List<WordInfoDto> words = result.getAlternatives(0).getWordsList().stream()
-							.map(w -> WordInfoDto.builder()
-								.word(w.getWord())
-								.startTime(w.getStartTime().getSeconds() + w.getStartTime().getNanos() / 1e9)
-								.endTime(w.getEndTime().getSeconds() + w.getEndTime().getNanos() / 1e9)
-								.build())
+							.map(w -> {
+								String spoken = w.getWord();
+								int index = context.currentWordIndex.getAndIncrement(); // 수정
+								String expected = (index < scriptWords.size()) ? scriptWords.get(index) : "";
+
+								return WordInfoDto.builder()
+									.word(spoken)
+									.startTime(w.getStartTime().getSeconds() + w.getStartTime().getNanos() / 1e9)
+									.endTime(w.getEndTime().getSeconds() + w.getEndTime().getNanos() / 1e9)
+									.isCorrect(spoken.equals(expected)) // 비교
+									.build();
+							})
 							.toList();
+
+
+						if (words.isEmpty()) {
+							log.warn("[{}] ❗ words 리스트가 비어 있음 (word-level 정보 없음)", session.getId());
+						}
 
 						TranscriptResult dto = TranscriptResult.builder()
 							.transcript(transcript)
@@ -127,6 +168,15 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 							String json = objectMapper.writeValueAsString(dto);
 							session.sendMessage(new TextMessage(json));
 							log.info("[{}] 전송: {} (final: {})", session.getId(), transcript, isFinal);
+							words.forEach(wordInfo ->
+								log.info("[{}] 단어: '{}', 시작: {}s, 종료: {}s, 정답여부: {}",
+									session.getId(),
+									wordInfo.getWord(),
+									wordInfo.getStartTime(),
+									wordInfo.getEndTime(),
+									wordInfo.isCorrect()
+								)
+							);
 						} catch (IOException e) {
 							log.error("[{}] WebSocket 응답 전송 실패", session.getId(), e);
 						}
@@ -153,6 +203,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 						.setEncoding(RecognitionConfig.AudioEncoding.LINEAR16)
 						.setLanguageCode("ko-KR")
 						.setSampleRateHertz(SAMPLE_RATE)
+						.setEnableWordTimeOffsets(true)
 						.build())
 					.setInterimResults(true)
 					.setSingleUtterance(false)

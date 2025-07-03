@@ -1,5 +1,7 @@
 package com._ithon.speeksee.domain.voicefeedback.streaming.model;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.springframework.web.socket.WebSocketSession;
 
 import com.google.api.gax.rpc.ClientStream;
@@ -20,6 +22,8 @@ public class SttSessionContext {
 	public ClientStream<StreamingRecognizeRequest> requestStream;
 	public StreamController controller;
 	public WebSocketSession session;
+
+	public AtomicInteger currentWordIndex = new AtomicInteger(0);
 
 	public void closeResources() {
 		try {

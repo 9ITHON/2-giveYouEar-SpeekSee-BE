@@ -13,4 +13,5 @@ public class WordInfoDto {
 	private String word;
 	private double startTime; // 초 단위
 	private double endTime;
+	private boolean isCorrect;
 }
