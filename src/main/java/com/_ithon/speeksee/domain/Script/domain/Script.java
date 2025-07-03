@@ -19,9 +19,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -37,7 +39,7 @@ public class Script extends BaseTimeEntity {
 	private String content; // 스크립트 내용
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "member_id")
+	@JoinColumn(name = "member_id", nullable = false)
 	private Member author;
 
 	@Enumerated(EnumType.STRING)
