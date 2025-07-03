@@ -13,22 +13,30 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
+
+import com._ithon.speeksee.global.auth.jwt.JwtAuthenticationFilter;
+import com._ithon.speeksee.global.auth.jwt.JwtTokenProvider;
+import com._ithon.speeksee.global.auth.jwt.LoginFilter;
+import com._ithon.speeksee.global.auth.service.CustomUserDetailsService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
 
 //    private final JWTUtil jwtUtil;
-//    private final ObjectMapper objectMapper;
+   private final ObjectMapper objectMapper;
 //    private final RefreshTokenService refreshTokenService;
 //    private final BlacklistService blacklistService;
-//    private final CustomUserDetailsService customUserDetailsService;
-//    private final JWTService jwtService;
+   private final CustomUserDetailsService customUserDetailsService;
+   private final JwtTokenProvider jwtTokenProvider;
 
 //    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 //    private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
@@ -47,8 +55,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authManager) throws Exception {
 
-//        LoginFilter loginFilter = new LoginFilter(authManager, objectMapper, jwtService);
-//        loginFilter.setFilterProcessesUrl("/api/auth/login");
+       LoginFilter loginFilter = new LoginFilter(authManager, jwtTokenProvider, objectMapper);
+       loginFilter.setFilterProcessesUrl("/api/auth/login");
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -76,6 +84,8 @@ public class SecurityConfig {
                         .authenticationEntryPoint((request, response, authException) ->
                                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")));
 
+        http.addFilterBefore(loginFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, customUserDetailsService), UsernamePasswordAuthenticationFilter.class);
 
 //        http.oauth2Login(oauth2 -> oauth2
 //                .successHandler(oAuth2LoginSuccessHandler)
