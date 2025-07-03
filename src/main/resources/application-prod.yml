@@ -47,3 +47,7 @@ springdoc:
 openai:
   api:
     key: ${OPENAI_API_KEY}
+
+google:
+  credentials:
+    path: credentials/google-stt-key.json

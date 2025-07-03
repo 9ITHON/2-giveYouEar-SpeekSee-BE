@@ -1,9 +1,12 @@
 package com._ithon.speeksee.domain.voicefeedback.streaming.infra;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.TextMessage;
@@ -12,11 +15,14 @@ import org.springframework.web.socket.WebSocketSession;
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.TranscriptResult;
 import com._ithon.speeksee.domain.voicefeedback.streaming.port.StreamingSttClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.rpc.ClientStream;
 import com.google.api.gax.rpc.ResponseObserver;
 import com.google.api.gax.rpc.StreamController;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.speech.v1.RecognitionConfig;
 import com.google.cloud.speech.v1.SpeechClient;
+import com.google.cloud.speech.v1.SpeechSettings;
 import com.google.cloud.speech.v1.StreamingRecognitionConfig;
 import com.google.cloud.speech.v1.StreamingRecognitionResult;
 import com.google.cloud.speech.v1.StreamingRecognizeRequest;
@@ -42,9 +48,26 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	// 세션 ID → 요청 스트림
 	private final Map<String, ClientStream<StreamingRecognizeRequest>> streamMap = new ConcurrentHashMap<>();
 
-	// 생성자에서 단 1번만 SpeechClient 생성
-	public GoogleStreamingSttClient() throws IOException {
-		this.speechClient = SpeechClient.create();
+	/**
+	 * Google Cloud Speech-to-Text 클라이언트를 초기화합니다.
+	 * <p>
+	 * Google Cloud 인증 정보를 사용하여 SpeechClient를 생성합니다.
+	 *
+	 * @param credentialsPath Google Cloud 인증 JSON 파일 경로
+	 * @throws IOException 인증 파일을 읽는 중 오류가 발생하면 예외가 발생합니다.
+	 */
+	public GoogleStreamingSttClient(
+		@Value("${google.credentials.path}") String credentialsPath
+	) throws IOException {
+		GoogleCredentials credentials = GoogleCredentials
+			.fromStream(new FileInputStream(credentialsPath))
+			.createScoped(List.of("https://www.googleapis.com/auth/cloud-platform"));
+
+		SpeechSettings settings = SpeechSettings.newBuilder()
+			.setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+			.build();
+
+		this.speechClient = SpeechClient.create(settings);
 	}
 
 	/**
