@@ -40,8 +40,8 @@ public class AuthServiceImpl implements AuthService {
 		Member member = memberRepository.findByEmail(loginRequestDto.getEmail())
 			.orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
 
-		String accessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getEmail());
-		String refreshTokenValue  = jwtTokenProvider.generateRefreshToken(member.getId(), member.getEmail());
+		String accessToken = jwtTokenProvider.generateAccessToken(member.getEmail());
+		String refreshTokenValue  = jwtTokenProvider.generateRefreshToken(member.getEmail());
 
 		RefreshToken refreshToken = RefreshToken.builder()
 			.token(refreshTokenValue)
@@ -85,8 +85,8 @@ public class AuthServiceImpl implements AuthService {
 		refreshTokenRepository.save(existingToken);
 
 		// 3. 새 access token 발급
-		String newAccessToken = jwtTokenProvider.generateAccessToken(member.getId(), member.getEmail());
-		String newRefreshToken = jwtTokenProvider.generateRefreshToken(member.getId(), member.getEmail());
+		String newAccessToken = jwtTokenProvider.generateAccessToken(member.getEmail());
+		String newRefreshToken = jwtTokenProvider.generateRefreshToken(member.getEmail());
 
 		RefreshToken newToken = RefreshToken.builder()
 			.token(newRefreshToken)

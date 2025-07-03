@@ -44,22 +44,21 @@ public class JwtTokenProvider {
 	}
 
 	// Access Token 생성(권한 포함)
-	public String generateAccessToken(Long userId, String email) {
-		return generateToken(userId, email, accessTokenValidTime, "access");
+	public String generateAccessToken(String email) {
+		return generateToken(email, accessTokenValidTime, "access");
 	}
 
 	// Refresh Token 생성(권한 포함X)
-	public String generateRefreshToken(Long userId, String email) {
-		return generateToken(userId, email, refreshTokenValidTime, "refresh");
+	public String generateRefreshToken(String email) {
+		return generateToken(email, refreshTokenValidTime, "refresh");
 	}
 
-	private String generateToken(Long userId, String email, long validTime, String type) {
+	private String generateToken(String email, long validTime, String type) {
 		Date now = new Date();
 		Date expirationTime = new Date(now.getTime() + validTime);
 
 		return Jwts.builder()
-			.subject(userId.toString())
-			.claim("email", email)
+			.subject(email.toString())
 			.claim("type", type)    // access, refresh
 			.issuedAt(now)
 			.expiration(expirationTime)
