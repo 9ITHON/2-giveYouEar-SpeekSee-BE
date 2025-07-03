@@ -89,26 +89,29 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 				@Override
 				public void onResponse(StreamingRecognizeResponse response) {
 					for (StreamingRecognitionResult result : response.getResultsList()) {
-						if (!result.getIsFinal()) {
-							return; // interim result는 무시
+						if (result.getAlternativesCount() == 0) continue;
+
+						String transcript = result.getAlternatives(0).getTranscript();
+						float confidence = result.getAlternatives(0).getConfidence();
+						boolean isFinal = result.getIsFinal();
+
+						if (!session.isOpen()) {
+							log.warn("[{}] 세션이 닫혀 응답 생략됨", session.getId());
+							return;
 						}
 
-						if (result.getAlternativesCount() > 0) {
-							String transcript = result.getAlternatives(0).getTranscript();
-							float confidence = result.getAlternatives(0).getConfidence();
+						TranscriptResult dto = TranscriptResult.builder()
+							.transcript(transcript)
+							.confidence(confidence)
+							.isFinal(isFinal)
+							.build();
 
-							TranscriptResult dto = TranscriptResult.builder()
-								.transcript(transcript)
-								.confidence(confidence)
-								.isFinal(true)
-								.build();
-
-							try {
-								String json = objectMapper.writeValueAsString(dto);
-								session.sendMessage(new TextMessage(json));
-							} catch (IOException e) {
-								log.error("[{}] WebSocket 응답 전송 실패", session.getId(), e);
-							}
+						try {
+							String json = objectMapper.writeValueAsString(dto);
+							session.sendMessage(new TextMessage(json));
+							log.info("[{}] 전송: {} (final: {})", session.getId(), transcript, isFinal);
+						} catch (IOException e) {
+							log.error("[{}] WebSocket 응답 전송 실패", session.getId(), e);
 						}
 					}
 				}
@@ -164,6 +167,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 		}
 
 		ByteString audioBytes = ByteString.copyFrom(message.getPayload().array());
+		log.debug("🎙 받은 오디오 크기 (bytes): {}", audioBytes.size()); // ← 로그 추가
 
 		stream.send(
 			StreamingRecognizeRequest.newBuilder()
