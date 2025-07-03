@@ -31,10 +31,10 @@ spring:
 cookie:
   secure: false
 
-#jwt:
-#  secret: ${JWT_SECRET_KEY}
-#  access-token-expiration: ${JWT_ACCESS_EXPIRATION}
-#  refresh-token-expiration: ${JWT_REFRESH_EXPIRATION}
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  access-token-expiration: ${JWT_ACCESS_EXPIRATION}
+  refresh-token-expiration: ${JWT_REFRESH_EXPIRATION}
 
 logging:
   level:
