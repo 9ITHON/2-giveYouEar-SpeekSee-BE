@@ -13,6 +13,8 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.TranscriptResult;
+import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.WordInfoDto;
+import com._ithon.speeksee.domain.voicefeedback.streaming.model.SttSessionContext;
 import com._ithon.speeksee.domain.voicefeedback.streaming.port.StreamingSttClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.gax.core.FixedCredentialsProvider;
@@ -46,7 +48,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	// 세션 ID → 요청 스트림
-	private final Map<String, ClientStream<StreamingRecognizeRequest>> streamMap = new ConcurrentHashMap<>();
+	private final Map<String, SttSessionContext> sessionMap = new ConcurrentHashMap<>();
 
 	/**
 	 * Google Cloud Speech-to-Text 클라이언트를 초기화합니다.
@@ -80,9 +82,13 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	@Override
 	public void start(WebSocketSession session) {
 		try {
+			SttSessionContext context = new SttSessionContext();
+			context.session = session;
+
 			ResponseObserver<StreamingRecognizeResponse> responseObserver = new ResponseObserver<>() {
 				@Override
 				public void onStart(StreamController controller) {
+					context.controller = controller;
 					log.info("🎙STT 스트리밍 시작: {}", session.getId());
 				}
 
@@ -100,10 +106,21 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 							return;
 						}
 
+
+
+						List<WordInfoDto> words = result.getAlternatives(0).getWordsList().stream()
+							.map(w -> WordInfoDto.builder()
+								.word(w.getWord())
+								.startTime(w.getStartTime().getSeconds() + w.getStartTime().getNanos() / 1e9)
+								.endTime(w.getEndTime().getSeconds() + w.getEndTime().getNanos() / 1e9)
+								.build())
+							.toList();
+
 						TranscriptResult dto = TranscriptResult.builder()
 							.transcript(transcript)
 							.confidence(confidence)
 							.isFinal(isFinal)
+							.words(words)
 							.build();
 
 						try {
@@ -130,7 +147,6 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 			ClientStream<StreamingRecognizeRequest> clientStream =
 				speechClient.streamingRecognizeCallable().splitCall(responseObserver);
 
-			// 초기 설정 요청 전송
 			clientStream.send(StreamingRecognizeRequest.newBuilder()
 				.setStreamingConfig(StreamingRecognitionConfig.newBuilder()
 					.setConfig(RecognitionConfig.newBuilder()
@@ -143,7 +159,10 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 					.build())
 				.build());
 
-			streamMap.put(session.getId(), clientStream);
+			context.client = speechClient;
+			context.requestStream = clientStream;
+
+			sessionMap.put(session.getId(), context);
 
 		} catch (Exception e) {
 			log.error("STT 스트리밍 세션 생성 실패: {}", session.getId(), e);
@@ -160,16 +179,16 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	 */
 	@Override
 	public void receiveAudio(WebSocketSession session, BinaryMessage message) {
-		ClientStream<StreamingRecognizeRequest> stream = streamMap.get(session.getId());
-		if (stream == null) {
+		SttSessionContext context = sessionMap.get(session.getId());
+		if (context == null || context.requestStream == null) {
 			log.warn("⚠[{}] 유효하지 않은 세션에서 오디오 수신", session.getId());
 			return;
 		}
 
 		ByteString audioBytes = ByteString.copyFrom(message.getPayload().array());
-		log.debug("🎙 받은 오디오 크기 (bytes): {}", audioBytes.size()); // ← 로그 추가
+		log.debug("🎙 받은 오디오 크기 (bytes): {}", audioBytes.size());
 
-		stream.send(
+		context.requestStream.send(
 			StreamingRecognizeRequest.newBuilder()
 				.setAudioContent(audioBytes)
 				.build()
@@ -185,10 +204,14 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	 */
 	@Override
 	public void end(WebSocketSession session) {
-		ClientStream<StreamingRecognizeRequest> stream = streamMap.remove(session.getId());
-		if (stream != null) {
-			stream.closeSend();
-			log.info("[{}] STT 스트리밍 종료", session.getId());
+		SttSessionContext context = sessionMap.remove(session.getId());
+		if (context != null) {
+			try {
+				context.closeResources();
+				log.info("[{}] STT 세션 리소스 정리 완료", session.getId());
+			} catch (Exception e) {
+				log.warn("[{}] STT 리소스 정리 중 오류", session.getId(), e);
+			}
 		}
 	}
 }

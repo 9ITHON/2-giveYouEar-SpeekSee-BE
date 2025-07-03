@@ -56,7 +56,8 @@ public class GoogleSyncSttClient implements SyncSttClient {
 				resultList.add(new TranscriptResult(
 					alternative.getTranscript(),
 					alternative.getConfidence(),
-					true //임시
+					true, //임시
+					null // 단어 정보는 동기식 API에서는 제공되지 않음
 				));
 			}
 		}
