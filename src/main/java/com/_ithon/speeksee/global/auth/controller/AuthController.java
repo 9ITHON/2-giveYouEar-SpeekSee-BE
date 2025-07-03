@@ -72,7 +72,7 @@ public class AuthController {
 		// 2. 응답 DTO 생성
 		AccessTokenResponseDto response = new AccessTokenResponseDto(
 			loginResponse.getAccessToken(),
-			loginResponse.getExpiresIn()
+			(int)loginResponse.getExpiresIn()
 		);
 
 		// 3. API 응답 래핑

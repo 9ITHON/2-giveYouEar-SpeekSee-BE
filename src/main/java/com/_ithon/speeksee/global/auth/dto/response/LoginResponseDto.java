@@ -4,10 +4,12 @@ import com._ithon.speeksee.domain.member.dto.response.MemberInfoResponseDto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
+@Builder
 @Schema(description = "로그인 응답 DTO")
 public class LoginResponseDto {
 
@@ -18,7 +20,7 @@ public class LoginResponseDto {
 	private String refreshToken;
 
 	@Schema(description = "액세스 토큰 만료 시간(초)", example = "3600")
-	private final int expiresIn;
+	private final long expiresIn;
 
 	@Schema(description = "로그인한 사용자 정보")
 	private final MemberInfoResponseDto memberInfo;
