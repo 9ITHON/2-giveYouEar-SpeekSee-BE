@@ -1,6 +1,7 @@
 package com._ithon.speeksee.global.auth.jwt;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,7 +12,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com._ithon.speeksee.domain.member.dto.response.MemberInfoResponseDto;
+import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.global.auth.dto.request.LoginRequestDto;
+import com._ithon.speeksee.global.auth.dto.response.LoginResponseDto;
+import com._ithon.speeksee.global.auth.model.CustomUserDetails;
 import com._ithon.speeksee.global.infra.exception.code.ErrorCode;
 import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,12 +51,44 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 	@Override
 	protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
 		FilterChain chain, Authentication authResult) throws IOException {
-		String username = authResult.getName();
-		String token = jwtTokenProvider.generateAccessToken(username);
 
-		response.addHeader("Authorization", "Bearer " + token);
-		response.setContentType("application/json");
-		response.getWriter().write("{\"token\": \"" + token + "\"}");
+		CustomUserDetails userDetails = (CustomUserDetails) authResult.getPrincipal();
+
+		String email = userDetails.getUsername(); // 이메일값임
+		String username = authResult.getName();
+
+		String accessToken = jwtTokenProvider.generateAccessToken(email);
+		String refreshToken = jwtTokenProvider.generateRefreshToken(email);
+		long expiresIn = jwtTokenProvider.getAccessTokenExpirationMs(); // 예: 3600초
+
+		Member member = userDetails.getMember();
+
+		MemberInfoResponseDto memberInfo = MemberInfoResponseDto.builder()
+			.userId(member.getId())
+			.email(member.getEmail())
+			.username(member.getUsername())
+			.currentLevel(member.getCurrentLevel())
+			.consecutiveDays(member.getConsecutiveDays())
+			.totalExp(member.getTotalExp())
+			.createdAt(member.getCreatedAt()) // 선택
+			.build();
+
+
+		// ✅ 로그인 응답 DTO 생성
+		LoginResponseDto loginResponse = LoginResponseDto.builder()
+			.accessToken(accessToken)
+			.refreshToken(refreshToken)
+			.expiresIn(expiresIn)
+			.memberInfo(memberInfo)
+			.build();
+
+		// ✅ API 응답 포맷에 맞게 감싸기
+		ApiRes<LoginResponseDto> apiRes = ApiRes.success(loginResponse, "로그인 성공");
+
+		// 🔽 응답 전송
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.setContentType("application/json; charset=UTF-8");
+		objectMapper.writeValue(response.getWriter(), apiRes);
 	}
 
 	@Override
