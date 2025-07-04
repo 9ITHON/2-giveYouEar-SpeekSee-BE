@@ -16,6 +16,7 @@ import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.Transcrip
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.WordInfoDto;
 import com._ithon.speeksee.domain.voicefeedback.streaming.model.SttSessionContext;
 import com._ithon.speeksee.domain.voicefeedback.streaming.port.StreamingSttClient;
+import com._ithon.speeksee.domain.voicefeedback.streaming.service.PracticeSaveService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.rpc.ClientStream;
@@ -42,6 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GoogleStreamingSttClient implements StreamingSttClient {
 
+
+
 	private static final int SAMPLE_RATE = 16000;
 
 	private final SpeechClient speechClient;
@@ -55,6 +58,8 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	private final List<String> scriptWords = List.of(dummyScript.split(" "));
 
 
+	private final PracticeSaveService practiceSaveService;
+
 	/**
 	 * Google Cloud Speech-to-Text 클라이언트를 초기화합니다.
 	 * <p>
@@ -64,7 +69,8 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	 * @throws IOException 인증 파일을 읽는 중 오류가 발생하면 예외가 발생합니다.
 	 */
 	public GoogleStreamingSttClient(
-		@Value("${google.credentials.path}") String credentialsPath
+		@Value("${google.credentials.path}") String credentialsPath,
+		PracticeSaveService practiceSaveService
 	) throws IOException {
 		GoogleCredentials credentials = GoogleCredentials
 			.fromStream(new FileInputStream(credentialsPath))
@@ -75,6 +81,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 			.build();
 
 		this.speechClient = SpeechClient.create(settings);
+		this.practiceSaveService = practiceSaveService;
 	}
 
 	/**
@@ -89,6 +96,18 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 		try {
 			SttSessionContext context = new SttSessionContext();
 			context.session = session;
+
+			String memberIdStr = getQueryParam(session, "memberId");
+			String scriptIdStr = getQueryParam(session, "scriptId");
+
+			if (memberIdStr == null || scriptIdStr == null) {
+				log.warn("[{}] WebSocket 파라미터 누락 (memberId 또는 scriptId)", session.getId());
+				session.close();
+				return;
+			}
+
+			context.memberId = Long.parseLong(memberIdStr);
+			context.scriptId = Long.parseLong(scriptIdStr);
 
 			ResponseObserver<StreamingRecognizeResponse> responseObserver = new ResponseObserver<>() {
 				@Override
@@ -131,11 +150,6 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 							}
 						}
 
-						// 🛑 interim이면 word info가 없을 수 있으므로 skip (테스트용)
-						if (!isFinal) {
-							log.debug("[{}] interim 결과 → word info 생략 가능", session.getId());
-							continue;
-						}
 
 						List<WordInfoDto> words = result.getAlternatives(0).getWordsList().stream()
 							.map(w -> {
@@ -152,6 +166,20 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 							})
 							.toList();
 
+						// 정확도 계산
+						double accuracy = words.isEmpty() ? 0.0 :
+							(double) words.stream().filter(WordInfoDto::isCorrect).count() / words.size();
+
+						// 최종 결과일 때 자동 저장
+						if (isFinal) {
+							practiceSaveService.save(
+								context.memberId,
+								context.scriptId,
+								transcript,
+								accuracy,
+								words
+							);
+						}
 
 						if (words.isEmpty()) {
 							log.warn("[{}] ❗ words 리스트가 비어 있음 (word-level 정보 없음)", session.getId());
@@ -218,6 +246,28 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 		} catch (Exception e) {
 			log.error("STT 스트리밍 세션 생성 실패: {}", session.getId(), e);
 		}
+	}
+
+	/**
+	 * WebSocket 세션에서 쿼리 파라미터를 추출합니다.
+	 * <p>
+	 * 예: "memberId=1&scriptId=3"에서 memberId 또는 scriptId 값을 추출합니다.
+	 *
+	 * @param session WebSocket 세션
+	 * @param key     추출할 파라미터 키 (예: "memberId" 또는 "scriptId")
+	 * @return 해당 키의 값, 없으면 null
+	 */
+	private String getQueryParam(WebSocketSession session, String key) {
+		String query = session.getUri().getQuery(); // 예: "memberId=1&scriptId=3"
+		if (query == null) return null;
+
+		for (String param : query.split("&")) {
+			String[] pair = param.split("=");
+			if (pair.length == 2 && pair[0].equals(key)) {
+				return pair[1];
+			}
+		}
+		return null;
 	}
 
 	/**

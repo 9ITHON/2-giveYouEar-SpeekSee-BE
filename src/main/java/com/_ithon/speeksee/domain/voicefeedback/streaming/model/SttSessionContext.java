@@ -25,6 +25,9 @@ public class SttSessionContext {
 
 	public AtomicInteger currentWordIndex = new AtomicInteger(0);
 
+	public Long memberId; // 또는 memberId
+	public Long scriptId;
+
 	public void closeResources() {
 		try {
 			if (requestStream != null) {
