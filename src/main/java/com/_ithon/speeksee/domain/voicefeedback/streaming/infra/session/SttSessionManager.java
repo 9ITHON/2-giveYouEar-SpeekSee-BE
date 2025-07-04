@@ -3,6 +3,7 @@ package com._ithon.speeksee.domain.voicefeedback.streaming.infra.session;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -45,6 +46,19 @@ public class SttSessionManager {
 				log.info("[{}] 세션 리소스 정리 완료", sessionId);
 			} catch (Exception e) {
 				log.warn("[{}] 세션 종료 중 오류", sessionId, e);
+			}
+		}
+	}
+
+	@Scheduled(fixedDelay = 60000) // 1분마다 실행
+	public void cleanupExpiredSessions() {
+		for (Map.Entry<String, SttSessionContext> entry : sessionMap.entrySet()) {
+			String sessionId = entry.getKey();
+			SttSessionContext context = entry.getValue();
+
+			if (context.isExpired()) {
+				log.warn("[{}] 세션 TTL 만료. 자동 정리", sessionId);
+				closeSession(context.session);
 			}
 		}
 	}

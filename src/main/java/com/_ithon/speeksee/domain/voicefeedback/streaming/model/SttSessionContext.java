@@ -31,6 +31,13 @@ public class SttSessionContext {
 	public Long memberId; // 또는 memberId
 	public Long scriptId;
 
+	public long createdAt = System.currentTimeMillis();  // 생성 시점 기록
+	public long ttlMillis = 5 * 60 * 1000; // 5분 TTL
+
+	public boolean isExpired() {
+		return System.currentTimeMillis() > createdAt + ttlMillis;
+	}
+
 	public void closeResources() {
 		try {
 			if (requestStream != null) requestStream.closeSend(); // 요청 스트림만 닫는다
