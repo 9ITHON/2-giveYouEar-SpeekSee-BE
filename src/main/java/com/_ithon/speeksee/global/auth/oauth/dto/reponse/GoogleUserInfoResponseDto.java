@@ -5,20 +5,22 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class GoogleUserInfoResponse implements OAuth2UserInfo{
+public class GoogleUserInfoResponseDto implements OAuth2UserInfo{
+
+	private Map<String, Object> attributes;
 
 	@Override
 	public String getEmail() {
-		return null;
+		return (String) attributes.get("email");
 	}
 
 	@Override
 	public String getName() {
-		return null;
+		return (String) attributes.get("name");
 	}
 
 	@Override
 	public Map<String, Object> getAttributes() {
-		return null;
+		return attributes;
 	}
 }
