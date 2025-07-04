@@ -47,11 +47,6 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	private final SpeechClient speechClient;
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
-	// 개발용 더미 스크립트
-	private final String dummyScript = "안녕하세요 오늘 날씨는 맑습니다";
-	private final List<String> scriptWords = List.of(dummyScript.split(" "));
-
-
 	private final PracticeSaveService practiceSaveService;
 	private final MemberRepository memberRepository;
 	private final ScriptRepository scriptRepository;
@@ -90,20 +85,17 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	/**
 	 * WebSocket 세션이 시작될 때 호출됩니다.
 	 * <p>
-	 * STT 스트리밍을 시작하고 초기 설정 요청을 전송합니다.
+	 * STT 스트리밍 세션을 초기화하고 필요한 파라미터를 설정합니다.
 	 *
 	 * @param session WebSocket 세션
 	 */
 	@Override
 	public void start(WebSocketSession session) {
 		try {
-
 			SttSessionContext context = sessionManager.startSession(session);
 
 			String memberIdStr = getQueryParam(session, "memberId");
 			String scriptIdStr = getQueryParam(session, "scriptId");
-
-
 
 			if (memberIdStr == null || scriptIdStr == null) {
 				log.warn("[{}] WebSocket 파라미터 누락 (memberId 또는 scriptId)", session.getId());
@@ -114,26 +106,32 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 			context.memberId = Long.parseLong(memberIdStr);
 			context.scriptId = Long.parseLong(scriptIdStr);
 
-			if (!memberRepository.existsById(context.memberId)) {
+
+			memberRepository.findById(context.memberId).orElseThrow(() -> {
 				log.warn("[{}] 존재하지 않는 memberId: {}", session.getId(), context.memberId);
-				throw new MemberNotFoundException();
-			}
+				return new MemberNotFoundException();
+			});
 
-			if (!scriptRepository.existsById(context.scriptId)) {
-				log.warn("[{}] 존재하지 않는 scriptId: {}", session.getId(), context.scriptId);
-				throw new ScriptNotFoundException();
-			}
+			// script 조회 및 전처리
+			String rawScript = scriptRepository.findById(context.scriptId)
+				.orElseThrow(() -> {
+					log.warn("[{}] 존재하지 않는 scriptId: {}", session.getId(), context.scriptId);
+					return new ScriptNotFoundException();
+				}).getContent();
 
-			context.memberId = Long.parseLong(memberIdStr);
-			context.scriptId = Long.parseLong(scriptIdStr);
+			// 전처리: 특수문자 제거, 공백 정규화
+			String preprocessed = rawScript.replaceAll("[^가-힣\\s]", "").replaceAll("\\s+", " ").trim();
+			List<String> scriptWords = List.of(preprocessed.split(" "));
 
+			// 응답 옵저버 생성
 			ResponseObserver<StreamingRecognizeResponse> responseObserver =
 				new GoogleSttResponseObserver(session, context, practiceSaveService, objectMapper, scriptWords);
 
-
+			// 클라이언트 스트림 생성
 			ClientStream<StreamingRecognizeRequest> clientStream =
 				speechClient.streamingRecognizeCallable().splitCall(responseObserver);
 
+			// 초기 설정 전송
 			clientStream.send(StreamingRecognizeRequest.newBuilder()
 				.setStreamingConfig(StreamingRecognitionConfig.newBuilder()
 					.setConfig(RecognitionConfig.newBuilder()
