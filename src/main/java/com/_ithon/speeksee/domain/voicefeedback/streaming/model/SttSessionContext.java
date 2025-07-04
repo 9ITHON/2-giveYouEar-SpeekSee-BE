@@ -33,11 +33,10 @@ public class SttSessionContext {
 
 	public void closeResources() {
 		try {
-			if (requestStream != null) requestStream.closeSend();
-			if (client != null) client.close();
-			if (session != null && session.isOpen()) session.close();
+			if (requestStream != null) requestStream.closeSend(); // 요청 스트림만 닫는다
+			if (session != null && session.isOpen()) session.close(); // WebSocket만 닫는다
 		} catch (Exception e) {
-			log.warn("[{}] 리소스 종료 중 오류 발생", session.getId(), e);
+			log.warn("[{}] 리소스 종료 중 오류 발생", session != null ? session.getId() : "UNKNOWN", e);
 		}
 	}
 }
