@@ -7,6 +7,7 @@ import com._ithon.speeksee.global.entity.BaseTimeEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -32,14 +33,20 @@ public class Member extends BaseTimeEntity {
 	@Column(name = "member_id")
 	private Long id;
 
-	@Column(nullable = false, unique = true)
+	@Column(unique = true)
 	private String username;
 
 	@Column(nullable = false, unique = true)
 	private String email;
 
-	@Column(nullable = false)
+	@Column(nullable = true)
 	private String passwordHash;
+
+	@Enumerated(EnumType.STRING)
+	private AuthProvider authProvider; // GOOGLE, KAKAO, NAVER 등
+
+	@Column
+	private String providerId; // 각 소셜 서비스에서 제공하는 고유 ID
 
 	private String currentLevel ="초급";
 
@@ -48,4 +55,5 @@ public class Member extends BaseTimeEntity {
 	private LocalDate lastLogin;
 
 	private Integer consecutiveDays;
+
 }
