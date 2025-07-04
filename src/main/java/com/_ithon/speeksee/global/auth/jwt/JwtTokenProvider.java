@@ -87,7 +87,7 @@ public class JwtTokenProvider {
 	}
 
 	public String getEmailFromToken(String token) {
-		return jwtParser.parseSignedClaims(token).getPayload().get("email").toString();
+		return jwtParser.parseSignedClaims(token).getPayload().getSubject();
 	}
 
 	public String getTokenType(String token) {
