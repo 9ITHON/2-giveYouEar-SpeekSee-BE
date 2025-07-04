@@ -12,6 +12,7 @@ import org.springframework.web.socket.WebSocketSession;
 import com._ithon.speeksee.domain.Script.repository.ScriptRepository;
 import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.response.GoogleSttResponseObserver;
+import com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender.StreamingRequestSender;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionManager;
 import com._ithon.speeksee.domain.voicefeedback.streaming.model.SttSessionContext;
 import com._ithon.speeksee.domain.voicefeedback.streaming.port.StreamingSttClient;
@@ -51,6 +52,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	private final MemberRepository memberRepository;
 	private final ScriptRepository scriptRepository;
 	private final SttSessionManager sessionManager;
+	private final StreamingRequestSender requestSender;
 
 	/**
 	 * Google Cloud Speech-to-Text 클라이언트를 초기화합니다.
@@ -65,7 +67,8 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 		PracticeSaveService practiceSaveService,
 		MemberRepository memberRepository,
 		ScriptRepository scriptRepository,
-		SttSessionManager sessionManager
+		SttSessionManager sessionManager,
+		StreamingRequestSender requestSender
 	) throws IOException {
 		GoogleCredentials credentials = GoogleCredentials
 			.fromStream(new FileInputStream(credentialsPath))
@@ -80,6 +83,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 		this.memberRepository = memberRepository;
 		this.scriptRepository = scriptRepository;
 		this.sessionManager = sessionManager;
+		this.requestSender = requestSender;
 	}
 
 	/**
@@ -197,11 +201,8 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 		ByteString audioBytes = ByteString.copyFrom(message.getPayload().array());
 		log.debug("🎙 받은 오디오 크기 (bytes): {}", audioBytes.size());
 
-		context.requestStream.send(
-			StreamingRecognizeRequest.newBuilder()
-				.setAudioContent(audioBytes)
-				.build()
-		);
+		// StreamingRequestSender를 통해 전송
+		requestSender.sendAudio(context, audioBytes);
 	}
 
 	/**
