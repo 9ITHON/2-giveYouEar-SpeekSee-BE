@@ -13,6 +13,7 @@ import com._ithon.speeksee.domain.Script.repository.ScriptRepository;
 import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.response.GoogleSttResponseObserver;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender.StreamingRequestSender;
+import com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender.WebSocketErrorSender;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionManager;
 import com._ithon.speeksee.domain.voicefeedback.streaming.model.SttSessionContext;
 import com._ithon.speeksee.domain.voicefeedback.streaming.port.StreamingSttClient;
@@ -53,6 +54,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	private final ScriptRepository scriptRepository;
 	private final SttSessionManager sessionManager;
 	private final StreamingRequestSender requestSender;
+	private final WebSocketErrorSender errorSender;
 
 	/**
 	 * Google Cloud Speech-to-Text 클라이언트를 초기화합니다.
@@ -68,7 +70,8 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 		MemberRepository memberRepository,
 		ScriptRepository scriptRepository,
 		SttSessionManager sessionManager,
-		StreamingRequestSender requestSender
+		StreamingRequestSender requestSender,
+		WebSocketErrorSender errorSender
 	) throws IOException {
 		GoogleCredentials credentials = GoogleCredentials
 			.fromStream(new FileInputStream(credentialsPath))
@@ -84,6 +87,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 		this.scriptRepository = scriptRepository;
 		this.sessionManager = sessionManager;
 		this.requestSender = requestSender;
+		this.errorSender = errorSender;
 	}
 
 	/**
@@ -102,8 +106,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 			String scriptIdStr = getQueryParam(session, "scriptId");
 
 			if (memberIdStr == null || scriptIdStr == null) {
-				log.warn("[{}] WebSocket 파라미터 누락 (memberId 또는 scriptId)", session.getId());
-				session.close();
+				errorSender.sendErrorAndClose(session, "AUTH_001", "memberId 또는 scriptId 파라미터가 누락되었습니다.");
 				return;
 			}
 
@@ -129,7 +132,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 
 			// 응답 옵저버 생성
 			ResponseObserver<StreamingRecognizeResponse> responseObserver =
-				new GoogleSttResponseObserver(session, context, practiceSaveService, objectMapper, scriptWords);
+				new GoogleSttResponseObserver(session, context, practiceSaveService, objectMapper, scriptWords, errorSender);
 
 			// 클라이언트 스트림 생성
 			ClientStream<StreamingRecognizeRequest> clientStream =
@@ -149,7 +152,6 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 					.build())
 				.build());
 
-			context.client = speechClient;
 			context.requestStream = clientStream;
 
 		} catch (Exception e) {
@@ -191,10 +193,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	public void receiveAudio(WebSocketSession session, BinaryMessage message) {
 		SttSessionContext context = sessionManager.getSession(session.getId());
 		if (context == null || context.requestStream == null) {
-			log.warn("⚠[{}] 유효하지 않은 세션에서 오디오 수신 (context: {}, requestStream: {})",
-				session.getId(),
-				context,
-				(context != null ? context.requestStream : null));
+			errorSender.sendErrorAndClose(session, "SESSION_INVALID", "유효하지 않은 세션입니다.");
 			return;
 		}
 
