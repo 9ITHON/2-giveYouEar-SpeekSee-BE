@@ -9,8 +9,8 @@ import com._ithon.speeksee.domain.Script.port.LlmClient;
 import com._ithon.speeksee.domain.Script.repository.ScriptRepository;
 import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.domain.member.repository.MemberRepository;
+import com._ithon.speeksee.global.infra.exception.entityException.MemberNotFoundException;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -32,7 +32,7 @@ public class ScriptService {
 	@Transactional
 	public Script createScript(ScriptCategory category, DifficultyLevel difficultyLevel, Long memberId) {
 		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new EntityNotFoundException("해당 사용자를 찾을 수 없습니다."));
+			.orElseThrow(MemberNotFoundException::new);
 
 		String prompt = buildPrompt(category, difficultyLevel);
 		String content = llmClient.chat(prompt);
