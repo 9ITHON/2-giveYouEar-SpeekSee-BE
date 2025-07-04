@@ -7,9 +7,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
-import com._ithon.speeksee.domain.voicefeedback.streaming.auth.AuthenticatedSession;
-import com._ithon.speeksee.domain.voicefeedback.streaming.model.SttSessionContext;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Component

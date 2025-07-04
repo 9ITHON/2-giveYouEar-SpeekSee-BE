@@ -2,7 +2,7 @@ package com._ithon.speeksee.domain.voicefeedback.streaming.dto.response;
 
 import java.util.List;
 
-import com._ithon.speeksee.domain.voicefeedback.streaming.dto.resquest.PracticeWordDto;
+import com._ithon.speeksee.domain.voicefeedback.streaming.dto.request.PracticeWordDto;
 import com._ithon.speeksee.domain.voicefeedback.streaming.entity.ScriptPractice;
 
 import lombok.AllArgsConstructor;

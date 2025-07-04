@@ -15,7 +15,7 @@ import com._ithon.speeksee.domain.voicefeedback.streaming.infra.response.GoogleS
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender.StreamingRequestSender;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender.WebSocketErrorSender;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionManager;
-import com._ithon.speeksee.domain.voicefeedback.streaming.model.SttSessionContext;
+import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionContext;
 import com._ithon.speeksee.domain.voicefeedback.streaming.port.StreamingSttClient;
 import com._ithon.speeksee.domain.voicefeedback.streaming.service.PracticeSaveService;
 import com._ithon.speeksee.global.infra.exception.entityException.MemberNotFoundException;

@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.streaming.model;
+package com._ithon.speeksee.domain.voicefeedback.streaming.infra.session;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

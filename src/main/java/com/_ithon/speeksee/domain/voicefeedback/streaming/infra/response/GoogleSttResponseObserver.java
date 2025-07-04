@@ -10,7 +10,7 @@ import org.springframework.web.socket.WebSocketSession;
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.TranscriptResult;
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.WordInfoDto;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender.WebSocketErrorSender;
-import com._ithon.speeksee.domain.voicefeedback.streaming.model.SttSessionContext;
+import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionContext;
 import com._ithon.speeksee.domain.voicefeedback.streaming.service.PracticeSaveService;
 import com._ithon.speeksee.domain.voicefeedback.streaming.util.FinalResponseValidator;
 import com._ithon.speeksee.domain.voicefeedback.streaming.util.LcsAligner;

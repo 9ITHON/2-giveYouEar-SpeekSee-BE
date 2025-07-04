@@ -9,7 +9,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 
-import com._ithon.speeksee.domain.voicefeedback.streaming.auth.AuthenticatedSession;
+import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.AuthenticatedSession;
 import com._ithon.speeksee.domain.voicefeedback.streaming.service.StreamingSttService;
 import com._ithon.speeksee.global.auth.jwt.JwtTokenProvider;
 import com.fasterxml.jackson.databind.JsonNode;

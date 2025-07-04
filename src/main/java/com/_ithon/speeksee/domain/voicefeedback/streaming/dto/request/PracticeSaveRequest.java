@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.streaming.dto.resquest;
+package com._ithon.speeksee.domain.voicefeedback.streaming.dto.request;
 
 import java.util.List;
 

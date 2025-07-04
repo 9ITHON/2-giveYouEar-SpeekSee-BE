@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.streaming.auth;
+package com._ithon.speeksee.domain.voicefeedback.streaming.infra.session;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

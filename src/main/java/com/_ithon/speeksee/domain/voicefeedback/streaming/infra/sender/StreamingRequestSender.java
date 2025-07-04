@@ -2,7 +2,7 @@ package com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender;
 
 import org.springframework.stereotype.Component;
 
-import com._ithon.speeksee.domain.voicefeedback.streaming.model.SttSessionContext;
+import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionContext;
 import com.google.cloud.speech.v1.StreamingRecognizeRequest;
 import com.google.protobuf.ByteString;
 
