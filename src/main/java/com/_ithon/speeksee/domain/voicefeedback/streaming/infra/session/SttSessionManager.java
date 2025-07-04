@@ -1,5 +1,6 @@
 package com._ithon.speeksee.domain.voicefeedback.streaming.infra.session;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -40,6 +41,7 @@ public class SttSessionManager {
 	public void closeSession(WebSocketSession session) {
 		String sessionId = session.getId();
 		SttSessionContext context = sessionMap.remove(sessionId);
+
 		if (context != null) {
 			try {
 				context.closeResources();
@@ -50,16 +52,16 @@ public class SttSessionManager {
 		}
 	}
 
-	@Scheduled(fixedDelay = 60000) // 1분마다 실행
+	@Scheduled(fixedDelay = 60000)
 	public void cleanupExpiredSessions() {
-		for (Map.Entry<String, SttSessionContext> entry : sessionMap.entrySet()) {
-			String sessionId = entry.getKey();
-			SttSessionContext context = entry.getValue();
+		List<String> expiredSessionIds = sessionMap.entrySet().stream()
+			.filter(entry -> entry.getValue().isExpired())
+			.map(Map.Entry::getKey)
+			.toList(); // Java 17 이상
 
-			if (context.isExpired()) {
-				log.warn("[{}] 세션 TTL 만료. 자동 정리", sessionId);
-				closeSession(context.session);
-			}
+		for (String sessionId : expiredSessionIds) {
+			log.warn("[{}] 세션 TTL 만료. 자동 정리", sessionId);
+			closeSession(sessionMap.get(sessionId).session);
 		}
 	}
 }
