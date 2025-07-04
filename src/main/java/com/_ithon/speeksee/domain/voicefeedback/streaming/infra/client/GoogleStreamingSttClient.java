@@ -3,19 +3,15 @@ package com._ithon.speeksee.domain.voicefeedback.streaming.infra.client;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.BinaryMessage;
-import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import com._ithon.speeksee.domain.Script.repository.ScriptRepository;
 import com._ithon.speeksee.domain.member.repository.MemberRepository;
-import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.TranscriptResult;
-import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.WordInfoDto;
+import com._ithon.speeksee.domain.voicefeedback.streaming.infra.response.GoogleSttResponseObserver;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionManager;
 import com._ithon.speeksee.domain.voicefeedback.streaming.model.SttSessionContext;
 import com._ithon.speeksee.domain.voicefeedback.streaming.port.StreamingSttClient;
@@ -26,13 +22,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.rpc.ClientStream;
 import com.google.api.gax.rpc.ResponseObserver;
-import com.google.api.gax.rpc.StreamController;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.speech.v1.RecognitionConfig;
 import com.google.cloud.speech.v1.SpeechClient;
 import com.google.cloud.speech.v1.SpeechSettings;
 import com.google.cloud.speech.v1.StreamingRecognitionConfig;
-import com.google.cloud.speech.v1.StreamingRecognitionResult;
 import com.google.cloud.speech.v1.StreamingRecognizeRequest;
 import com.google.cloud.speech.v1.StreamingRecognizeResponse;
 import com.google.protobuf.ByteString;
@@ -52,9 +46,6 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 
 	private final SpeechClient speechClient;
 	private final ObjectMapper objectMapper = new ObjectMapper();
-
-	// 세션 ID → 요청 스트림
-	private final Map<String, SttSessionContext> sessionMap = new ConcurrentHashMap<>();
 
 	// 개발용 더미 스크립트
 	private final String dummyScript = "안녕하세요 오늘 날씨는 맑습니다";
@@ -107,16 +98,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	public void start(WebSocketSession session) {
 		try {
 
-			// 기존 세션이 존재하면 정리
-			if (sessionMap.containsKey(session.getId())) {
-				log.warn("[{}] 기존 세션이 존재하여 삭제 후 재시작", session.getId());
-				SttSessionContext oldContext = sessionMap.remove(session.getId());
-				oldContext.closeResources(); // 안전하게 종료
-			}
-
-			SttSessionContext context = new SttSessionContext();
-			context.session = session;
-			sessionMap.put(session.getId(), context);
+			SttSessionContext context = sessionManager.startSession(session);
 
 			String memberIdStr = getQueryParam(session, "memberId");
 			String scriptIdStr = getQueryParam(session, "scriptId");
@@ -145,118 +127,9 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 			context.memberId = Long.parseLong(memberIdStr);
 			context.scriptId = Long.parseLong(scriptIdStr);
 
-			ResponseObserver<StreamingRecognizeResponse> responseObserver = new ResponseObserver<>() {
-				@Override
-				public void onStart(StreamController controller) {
-					context.controller = controller;
-					log.info("🎙STT 스트리밍 시작: {}", session.getId());
-				}
+			ResponseObserver<StreamingRecognizeResponse> responseObserver =
+				new GoogleSttResponseObserver(session, context, practiceSaveService, objectMapper, scriptWords);
 
-				@Override
-				public void onResponse(StreamingRecognizeResponse response) {
-					for (StreamingRecognitionResult result : response.getResultsList()) {
-						if (result.getAlternativesCount() == 0) continue;
-
-						String transcript = result.getAlternatives(0).getTranscript();
-						float confidence = result.getAlternatives(0).getConfidence();
-						boolean isFinal = result.getIsFinal();
-
-						if (!session.isOpen()) {
-							log.warn("[{}] 세션이 닫혀 응답 생략됨", session.getId());
-							return;
-						}
-
-						log.info("[{}] >>> STT 응답 (final: {}): {}", session.getId(), isFinal, transcript);
-						var alt = result.getAlternatives(0);
-
-						if (alt.getWordsCount() == 0) {
-							log.warn("[{}] ⚠ wordsList 비어 있음", session.getId());
-						} else {
-							log.info("[{}] wordsList 개수: {}", session.getId(), alt.getWordsCount());
-
-							for (var word : alt.getWordsList()) {
-								log.info("[{}] 단어='{}', start={}s, end={}s, hasStartTime={}, hasEndTime={}",
-									session.getId(),
-									word.getWord(),
-									word.getStartTime().getSeconds() + word.getStartTime().getNanos() / 1e9,
-									word.getEndTime().getSeconds() + word.getEndTime().getNanos() / 1e9,
-									word.hasStartTime(),
-									word.hasEndTime()
-								);
-							}
-						}
-
-
-						List<WordInfoDto> words = result.getAlternatives(0).getWordsList().stream()
-							.map(w -> {
-								String spoken = w.getWord();
-								int index = context.currentWordIndex.getAndIncrement(); // 수정
-								String expected = (index < scriptWords.size()) ? scriptWords.get(index) : "";
-
-								return WordInfoDto.builder()
-									.word(spoken)
-									.startTime(w.getStartTime().getSeconds() + w.getStartTime().getNanos() / 1e9)
-									.endTime(w.getEndTime().getSeconds() + w.getEndTime().getNanos() / 1e9)
-									.isCorrect(spoken.equals(expected)) // 비교
-									.build();
-							})
-							.toList();
-
-						// 정확도 계산
-						double accuracy = words.isEmpty() ? 0.0 :
-							(double) words.stream().filter(WordInfoDto::isCorrect).count() / words.size();
-
-						// 최종 결과일 때 자동 저장
-						if (isFinal) {
-							practiceSaveService.save(
-								context.memberId,
-								context.scriptId,
-								transcript,
-								accuracy,
-								words
-							);
-						}
-
-						if (words.isEmpty()) {
-							log.warn("[{}] ❗ words 리스트가 비어 있음 (word-level 정보 없음)", session.getId());
-						}
-
-						TranscriptResult dto = TranscriptResult.builder()
-							.transcript(transcript)
-							.confidence(confidence)
-							.isFinal(isFinal)
-							.words(words)
-							.build();
-
-						try {
-							String json = objectMapper.writeValueAsString(dto);
-							session.sendMessage(new TextMessage(json));
-							log.info("[{}] 전송: {} (final: {})", session.getId(), transcript, isFinal);
-							words.forEach(wordInfo ->
-								log.info("[{}] 단어: '{}', 시작: {}s, 종료: {}s, 정답여부: {}",
-									session.getId(),
-									wordInfo.getWord(),
-									wordInfo.getStartTime(),
-									wordInfo.getEndTime(),
-									wordInfo.isCorrect()
-								)
-							);
-						} catch (IOException e) {
-							log.error("[{}] WebSocket 응답 전송 실패", session.getId(), e);
-						}
-					}
-				}
-
-				@Override
-				public void onComplete() {
-					log.info("STT 스트리밍 완료: {}", session.getId());
-				}
-
-				@Override
-				public void onError(Throwable t) {
-					log.error("STT 스트리밍 오류: {}", session.getId(), t);
-				}
-			};
 
 			ClientStream<StreamingRecognizeRequest> clientStream =
 				speechClient.streamingRecognizeCallable().splitCall(responseObserver);
@@ -314,7 +187,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	 */
 	@Override
 	public void receiveAudio(WebSocketSession session, BinaryMessage message) {
-		SttSessionContext context = sessionMap.get(session.getId());
+		SttSessionContext context = sessionManager.getSession(session.getId());
 		if (context == null || context.requestStream == null) {
 			log.warn("⚠[{}] 유효하지 않은 세션에서 오디오 수신 (context: {}, requestStream: {})",
 				session.getId(),
