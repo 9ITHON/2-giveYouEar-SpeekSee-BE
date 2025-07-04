@@ -40,7 +40,17 @@ public class SttSocketHandler extends BinaryWebSocketHandler {
 
 	@Override
 	protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) {
-		log.debug("BinaryMessage 수신: {}", session.getId());
+		AuthenticatedSession auth = (AuthenticatedSession) session.getAttributes().get("auth");
+		if (auth == null) {
+			log.warn("인증되지 않은 세션의 바이너리 메시지: {}", session.getId());
+			try {
+				session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Unauthorized"));
+			} catch (IOException e) {
+				log.error("세션 종료 실패", e);
+			}
+			return;
+		}
+
 		sttService.handleAudio(session, message);
 	}
 
