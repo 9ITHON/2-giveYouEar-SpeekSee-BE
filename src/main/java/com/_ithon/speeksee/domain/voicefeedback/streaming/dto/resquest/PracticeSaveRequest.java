@@ -1,5 +1,7 @@
 package com._ithon.speeksee.domain.voicefeedback.streaming.dto.resquest;
 
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

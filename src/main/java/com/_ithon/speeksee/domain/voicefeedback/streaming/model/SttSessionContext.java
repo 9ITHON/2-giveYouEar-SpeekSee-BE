@@ -9,6 +9,8 @@ import com.google.api.gax.rpc.StreamController;
 import com.google.cloud.speech.v1.SpeechClient;
 import com.google.cloud.speech.v1.StreamingRecognizeRequest;
 
+import lombok.extern.slf4j.Slf4j;
+
 /*
  * SttSessionContext.java
  *
@@ -17,6 +19,7 @@ import com.google.cloud.speech.v1.StreamingRecognizeRequest;
  *
  * 리소스 정리를 위한 closeResources 메서드를 제공합니다.
  */
+@Slf4j
 public class SttSessionContext {
 	public SpeechClient client;
 	public ClientStream<StreamingRecognizeRequest> requestStream;
@@ -30,14 +33,11 @@ public class SttSessionContext {
 
 	public void closeResources() {
 		try {
-			if (requestStream != null) {
-				requestStream.closeSend();
-			}
-			if (client != null) {
-				client.close();
-			}
+			if (requestStream != null) requestStream.closeSend();
+			if (client != null) client.close();
+			if (session != null && session.isOpen()) session.close();
 		} catch (Exception e) {
-			// 로깅은 호출 쪽에서 처리
+			log.warn("[{}] 리소스 종료 중 오류 발생", session.getId(), e);
 		}
 	}
 }

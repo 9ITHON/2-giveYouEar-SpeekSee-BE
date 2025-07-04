@@ -54,6 +54,7 @@ public class ScriptPractice {
 	private String audioUrl;
 
 	// 단어별 피드백 (연관관계 주인 아님)
+	@Builder.Default
 	@OneToMany(mappedBy = "practice", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<PracticeWord> wordList = new ArrayList<>();
 

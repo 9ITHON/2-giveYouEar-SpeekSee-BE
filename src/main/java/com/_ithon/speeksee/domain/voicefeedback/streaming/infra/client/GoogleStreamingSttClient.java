@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.streaming.infra;
+package com._ithon.speeksee.domain.voicefeedback.streaming.infra.client;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -16,6 +16,7 @@ import com._ithon.speeksee.domain.Script.repository.ScriptRepository;
 import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.TranscriptResult;
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.WordInfoDto;
+import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionManager;
 import com._ithon.speeksee.domain.voicefeedback.streaming.model.SttSessionContext;
 import com._ithon.speeksee.domain.voicefeedback.streaming.port.StreamingSttClient;
 import com._ithon.speeksee.domain.voicefeedback.streaming.service.PracticeSaveService;
@@ -47,8 +48,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GoogleStreamingSttClient implements StreamingSttClient {
 
-
-
 	private static final int SAMPLE_RATE = 16000;
 
 	private final SpeechClient speechClient;
@@ -65,6 +64,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	private final PracticeSaveService practiceSaveService;
 	private final MemberRepository memberRepository;
 	private final ScriptRepository scriptRepository;
+	private final SttSessionManager sessionManager;
 
 	/**
 	 * Google Cloud Speech-to-Text 클라이언트를 초기화합니다.
@@ -78,7 +78,8 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 		@Value("${google.credentials.path}") String credentialsPath,
 		PracticeSaveService practiceSaveService,
 		MemberRepository memberRepository,
-		ScriptRepository scriptRepository
+		ScriptRepository scriptRepository,
+		SttSessionManager sessionManager
 	) throws IOException {
 		GoogleCredentials credentials = GoogleCredentials
 			.fromStream(new FileInputStream(credentialsPath))
@@ -92,6 +93,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 		this.practiceSaveService = practiceSaveService;
 		this.memberRepository = memberRepository;
 		this.scriptRepository = scriptRepository;
+		this.sessionManager = sessionManager;
 	}
 
 	/**
@@ -104,17 +106,31 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	@Override
 	public void start(WebSocketSession session) {
 		try {
+
+			// 기존 세션이 존재하면 정리
+			if (sessionMap.containsKey(session.getId())) {
+				log.warn("[{}] 기존 세션이 존재하여 삭제 후 재시작", session.getId());
+				SttSessionContext oldContext = sessionMap.remove(session.getId());
+				oldContext.closeResources(); // 안전하게 종료
+			}
+
 			SttSessionContext context = new SttSessionContext();
 			context.session = session;
+			sessionMap.put(session.getId(), context);
 
 			String memberIdStr = getQueryParam(session, "memberId");
 			String scriptIdStr = getQueryParam(session, "scriptId");
+
+
 
 			if (memberIdStr == null || scriptIdStr == null) {
 				log.warn("[{}] WebSocket 파라미터 누락 (memberId 또는 scriptId)", session.getId());
 				session.close();
 				return;
 			}
+
+			context.memberId = Long.parseLong(memberIdStr);
+			context.scriptId = Long.parseLong(scriptIdStr);
 
 			if (!memberRepository.existsById(context.memberId)) {
 				log.warn("[{}] 존재하지 않는 memberId: {}", session.getId(), context.memberId);
@@ -261,8 +277,6 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 			context.client = speechClient;
 			context.requestStream = clientStream;
 
-			sessionMap.put(session.getId(), context);
-
 		} catch (Exception e) {
 			log.error("STT 스트리밍 세션 생성 실패: {}", session.getId(), e);
 		}
@@ -302,7 +316,10 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	public void receiveAudio(WebSocketSession session, BinaryMessage message) {
 		SttSessionContext context = sessionMap.get(session.getId());
 		if (context == null || context.requestStream == null) {
-			log.warn("⚠[{}] 유효하지 않은 세션에서 오디오 수신", session.getId());
+			log.warn("⚠[{}] 유효하지 않은 세션에서 오디오 수신 (context: {}, requestStream: {})",
+				session.getId(),
+				context,
+				(context != null ? context.requestStream : null));
 			return;
 		}
 
@@ -325,14 +342,6 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	 */
 	@Override
 	public void end(WebSocketSession session) {
-		SttSessionContext context = sessionMap.remove(session.getId());
-		if (context != null) {
-			try {
-				context.closeResources();
-				log.info("[{}] STT 세션 리소스 정리 완료", session.getId());
-			} catch (Exception e) {
-				log.warn("[{}] STT 리소스 정리 중 오류", session.getId(), e);
-			}
-		}
+		sessionManager.closeSession(session);
 	}
 }
