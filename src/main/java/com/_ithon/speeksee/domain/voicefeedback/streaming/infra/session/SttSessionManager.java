@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
+import com._ithon.speeksee.domain.voicefeedback.streaming.auth.AuthenticatedSession;
 import com._ithon.speeksee.domain.voicefeedback.streaming.model.SttSessionContext;
 
 import lombok.extern.slf4j.Slf4j;
@@ -18,18 +19,26 @@ public class SttSessionManager {
 	private final Map<String, SttSessionContext> sessionMap = new ConcurrentHashMap<>();
 
 	public SttSessionContext startSession(WebSocketSession session) {
-		String sessionId = session.getId();
-
-		// 기존 세션이 존재하면 종료
-		if (sessionMap.containsKey(sessionId)) {
-			log.warn("[{}] 기존 세션 존재. 종료 후 새 세션 시작", sessionId);
-			closeSession(sessionId); // 중복 제거
+		if (sessionMap.containsKey(session.getId())) {
+			log.warn("[{}] 이미 활성화된 세션입니다.", session.getId());
+			return sessionMap.get(session.getId());
 		}
 
 		SttSessionContext context = new SttSessionContext();
 		context.session = session;
-		sessionMap.put(sessionId, context);
 
+		// 세션에서 인증 정보 꺼내기
+		Object authAttr = session.getAttributes().get("auth");
+		if (authAttr instanceof AuthenticatedSession auth) {
+			context.memberId = auth.getMemberId();
+			context.scriptId = auth.getScriptId();
+			// 필요 시 context.email = auth.getEmail(); 추가 가능
+			log.info("인증 정보 적용됨: memberId={}, scriptId={}", auth.getMemberId(), auth.getScriptId());
+		} else {
+			log.warn("[{}] 인증 정보가 존재하지 않습니다. AUTH 메시지를 먼저 보내야 합니다.", session.getId());
+		}
+
+		sessionMap.put(session.getId(), context);
 		return context;
 	}
 

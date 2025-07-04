@@ -102,16 +102,10 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 		try {
 			SttSessionContext context = sessionManager.startSession(session);
 
-			String memberIdStr = getQueryParam(session, "memberId");
-			String scriptIdStr = getQueryParam(session, "scriptId");
-
-			if (memberIdStr == null || scriptIdStr == null) {
-				errorSender.sendErrorAndClose(session, "AUTH_001", "memberId 또는 scriptId 파라미터가 누락되었습니다.");
+			if (context.memberId == null || context.scriptId == null) {
+				errorSender.sendErrorAndClose(session, "AUTH_001", "인증 정보가 없습니다. AUTH 메시지를 먼저 보내야 합니다.");
 				return;
 			}
-
-			context.memberId = Long.parseLong(memberIdStr);
-			context.scriptId = Long.parseLong(scriptIdStr);
 
 
 			memberRepository.findById(context.memberId).orElseThrow(() -> {
