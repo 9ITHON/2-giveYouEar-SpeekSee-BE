@@ -12,7 +12,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -35,7 +34,7 @@ public class Script extends BaseTimeEntity {
 
 	private String title; // 스크립트 제목
 
-	@Lob
+	@Column(columnDefinition = "TEXT", nullable = false)
 	private String content; // 스크립트 내용
 
 	@ManyToOne(fetch = FetchType.LAZY)

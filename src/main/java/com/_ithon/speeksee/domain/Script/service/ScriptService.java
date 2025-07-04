@@ -1,5 +1,8 @@
 package com._ithon.speeksee.domain.Script.service;
 
+import java.util.List;
+
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import com._ithon.speeksee.domain.Script.domain.DifficultyLevel;
@@ -10,6 +13,7 @@ import com._ithon.speeksee.domain.Script.repository.ScriptRepository;
 import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.global.infra.exception.entityException.MemberNotFoundException;
+import com._ithon.speeksee.global.infra.exception.entityException.ScriptNotFoundException;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -86,4 +90,36 @@ public class ScriptService {
 			category.getDescription()
 		);
 	}
+
+	@Transactional
+	public List<Script> getScriptsByMemberId(Long memberId) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(MemberNotFoundException::new);
+		return member.getScripts();
+	}
+
+	@Transactional
+	public Script getScriptByIdAndMemberId(Long scriptId, Long memberId) {
+		Script script = scriptRepository.findById(scriptId)
+			.orElseThrow(ScriptNotFoundException::new);
+
+		if (!script.getAuthor().getId().equals(memberId)) {
+			throw new AccessDeniedException("해당 스크립트에 접근할 권한이 없습니다.");
+		}
+
+		return script;
+	}
+
+	@Transactional
+	public void deleteScriptByIdAndMemberId(Long scriptId, Long memberId) {
+		Script script = scriptRepository.findById(scriptId)
+			.orElseThrow(ScriptNotFoundException::new);
+
+		if (!script.getAuthor().getId().equals(memberId)) {
+			throw new AccessDeniedException("해당 스크립트에 접근할 권한이 없습니다.");
+		}
+
+		scriptRepository.delete(script);
+	}
+
 }
