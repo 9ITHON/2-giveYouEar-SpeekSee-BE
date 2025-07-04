@@ -1,4 +1,4 @@
-package com._ithon.speeksee.global.auth.oauth.dto.request;
+package com._ithon.speeksee.global.auth.dto.request;
 
 import lombok.Getter;
 

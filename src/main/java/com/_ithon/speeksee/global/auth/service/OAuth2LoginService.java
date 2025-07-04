@@ -1,4 +1,4 @@
-package com._ithon.speeksee.global.auth.oauth.service;
+package com._ithon.speeksee.global.auth.service;
 
 import java.util.Map;
 
@@ -7,9 +7,8 @@ import org.springframework.stereotype.Service;
 import com._ithon.speeksee.domain.member.entity.AuthProvider;
 import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.global.auth.dto.response.LoginResponseDto;
-import com._ithon.speeksee.global.auth.oauth.dto.reponse.GoogleUserInfoResponseDto;
-import com._ithon.speeksee.global.auth.oauth.dto.reponse.OAuth2UserInfo;
-import com._ithon.speeksee.global.auth.service.AuthService;
+import com._ithon.speeksee.global.auth.dto.response.GoogleUserInfoResponseDto;
+import com._ithon.speeksee.global.auth.dto.response.OAuth2UserInfo;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

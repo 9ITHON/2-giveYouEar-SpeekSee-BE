@@ -1,4 +1,4 @@
-package com._ithon.speeksee.global.auth.oauth.service;
+package com._ithon.speeksee.global.auth.service;
 
 import java.util.Map;
 

@@ -1,4 +1,4 @@
-package com._ithon.speeksee.global.auth.oauth.service;
+package com._ithon.speeksee.global.auth.service;
 
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.stereotype.Service;
@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import com._ithon.speeksee.domain.member.entity.AuthProvider;
 import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.domain.member.repository.MemberRepository;
-import com._ithon.speeksee.global.auth.oauth.dto.reponse.OAuth2UserInfo;
+import com._ithon.speeksee.global.auth.dto.response.OAuth2UserInfo;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
