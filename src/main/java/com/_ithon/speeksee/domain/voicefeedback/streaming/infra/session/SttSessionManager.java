@@ -1,6 +1,5 @@
 package com._ithon.speeksee.domain.voicefeedback.streaming.infra.session;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,7 +23,7 @@ public class SttSessionManager {
 		// 기존 세션이 존재하면 종료
 		if (sessionMap.containsKey(sessionId)) {
 			log.warn("[{}] 기존 세션 존재. 종료 후 새 세션 시작", sessionId);
-			closeSession(session);
+			closeSession(sessionId); // 중복 제거
 		}
 
 		SttSessionContext context = new SttSessionContext();
@@ -37,11 +36,12 @@ public class SttSessionManager {
 	public SttSessionContext getSession(String sessionId) {
 		return sessionMap.get(sessionId);
 	}
-
-	public void closeSession(WebSocketSession session) {
-		String sessionId = session.getId();
+	/**
+	 * 세션을 종료하고 리소스를 정리합니다.
+	 * @param sessionId 세션 ID
+	 */
+	public void closeSession(String sessionId) {
 		SttSessionContext context = sessionMap.remove(sessionId);
-
 		if (context != null) {
 			try {
 				context.closeResources();
@@ -52,16 +52,28 @@ public class SttSessionManager {
 		}
 	}
 
-	@Scheduled(fixedDelay = 60000)
-	public void cleanupExpiredSessions() {
-		List<String> expiredSessionIds = sessionMap.entrySet().stream()
-			.filter(entry -> entry.getValue().isExpired())
-			.map(Map.Entry::getKey)
-			.toList(); // Java 17 이상
+	/**
+	 * WebSocketSession을 통해 세션을 종료합니다.
+	 * @param session WebSocketSession
+	 */
+	// 기존 WebSocketSession 기반 메서드는 위 메서드를 재사용
+	public void closeSession(WebSocketSession session) {
+		closeSession(session.getId());
+	}
 
-		for (String sessionId : expiredSessionIds) {
-			log.warn("[{}] 세션 TTL 만료. 자동 정리", sessionId);
-			closeSession(sessionMap.get(sessionId).session);
+	/**
+	 * 주기적으로 모든 세션을 종료하고 리소스를 정리합니다.
+	 */
+	@Scheduled(fixedDelay = 60000) // 1분마다 실행
+	public void cleanupExpiredSessions() {
+		for (Map.Entry<String, SttSessionContext> entry : sessionMap.entrySet()) {
+			String sessionId = entry.getKey();
+			SttSessionContext context = entry.getValue();
+
+			if (context != null && context.isExpired()) {
+				log.warn("[{}] 세션 TTL 만료. 자동 정리", sessionId);
+				closeSession(sessionId);
+			}
 		}
 	}
 }

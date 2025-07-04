@@ -14,6 +14,9 @@ public class WordInfoDto {
 	@Schema(description = "인식된 단어", example = "안녕하세요")
 	private String word;
 
+	@Schema(description = "예상 단어", example = "안녕하세요")
+	private String expected;
+
 	@Schema(description = "단어 시작 시간 (초)", example = "0.25")
 	private double startTime;
 

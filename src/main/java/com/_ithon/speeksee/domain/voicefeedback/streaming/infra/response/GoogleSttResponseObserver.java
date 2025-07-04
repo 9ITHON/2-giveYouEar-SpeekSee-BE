@@ -12,17 +12,20 @@ import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.WordInfoD
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender.WebSocketErrorSender;
 import com._ithon.speeksee.domain.voicefeedback.streaming.model.SttSessionContext;
 import com._ithon.speeksee.domain.voicefeedback.streaming.service.PracticeSaveService;
+import com._ithon.speeksee.domain.voicefeedback.streaming.util.FinalResponseValidator;
+import com._ithon.speeksee.domain.voicefeedback.streaming.util.LcsAligner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.gax.rpc.ResponseObserver;
 import com.google.api.gax.rpc.StreamController;
+import com.google.cloud.speech.v1.SpeechRecognitionAlternative;
 import com.google.cloud.speech.v1.StreamingRecognitionResult;
 import com.google.cloud.speech.v1.StreamingRecognizeResponse;
+import com.google.cloud.speech.v1.WordInfo;
 
 import lombok.extern.slf4j.Slf4j;
 
-
 @Slf4j
-public class GoogleSttResponseObserver implements ResponseObserver<StreamingRecognizeResponse> {
+public class GoogleSttResponseObserver implements ResponseObserver<com.google.cloud.speech.v1.StreamingRecognizeResponse> {
 
 	private final WebSocketSession session;
 	private final SttSessionContext context;
@@ -50,7 +53,7 @@ public class GoogleSttResponseObserver implements ResponseObserver<StreamingReco
 	@Override
 	public void onStart(StreamController controller) {
 		context.controller = controller;
-		log.info("🎙STT 스트리밍 시작: {}", session.getId());
+		log.info("🎙 STT 스트리밍 시작: {}", session.getId());
 	}
 
 	@Override
@@ -58,7 +61,7 @@ public class GoogleSttResponseObserver implements ResponseObserver<StreamingReco
 		for (StreamingRecognitionResult result : response.getResultsList()) {
 			if (result.getAlternativesCount() == 0) continue;
 
-			var alt = result.getAlternatives(0);
+			SpeechRecognitionAlternative alt = result.getAlternatives(0);
 			String transcript = alt.getTranscript();
 			float confidence = alt.getConfidence();
 			boolean isFinal = result.getIsFinal();
@@ -70,42 +73,36 @@ public class GoogleSttResponseObserver implements ResponseObserver<StreamingReco
 
 			log.info("[{}] >>> STT 응답 (final: {}): {}", session.getId(), isFinal, transcript);
 
-			List<WordInfoDto> words = new ArrayList<>();
-			int tempIndex = context.currentWordIndex.get(); // 임시 인덱스 복사
+			List<String> spokenWords = new ArrayList<>();
+			List<Double> startTimes = new ArrayList<>();
+			List<Double> endTimes = new ArrayList<>();
 
-			for (var w : alt.getWordsList()) {
-				String spoken = w.getWord();
-				String expected = (tempIndex < scriptWords.size()) ? scriptWords.get(tempIndex) : "";
-
-				words.add(WordInfoDto.builder()
-					.word(spoken)
-					.startTime(w.getStartTime().getSeconds() + w.getStartTime().getNanos() / 1e9)
-					.endTime(w.getEndTime().getSeconds() + w.getEndTime().getNanos() / 1e9)
-					.isCorrect(spoken.equals(expected))
-					.build());
-
-				tempIndex++;
+			for (WordInfo word : alt.getWordsList()) {
+				spokenWords.add(word.getWord().trim());
+				startTimes.add(word.getStartTime().getSeconds() + word.getStartTime().getNanos() / 1e9);
+				endTimes.add(word.getEndTime().getSeconds() + word.getEndTime().getNanos() / 1e9);
 			}
 
-			double accuracy = words.isEmpty() ? 0.0 :
-				(double) words.stream().filter(WordInfoDto::isCorrect).count() / words.size();
+			List<WordInfoDto> wordInfos = LcsAligner.align(spokenWords, scriptWords, startTimes, endTimes);
 
-			if (isFinal) {
-				context.currentWordIndex.set(tempIndex);
-				practiceSaveService.save(context.memberId, context.scriptId, transcript, accuracy, words);
+			double accuracy = wordInfos.isEmpty() ? 0.0 :
+				(double) wordInfos.stream().filter(WordInfoDto::isCorrect).count() / wordInfos.size();
+
+			if (isFinal && FinalResponseValidator.isMeaningfulFinalResponse(wordInfos, transcript, confidence)) {
+				practiceSaveService.save(context.memberId, context.scriptId, transcript, accuracy, wordInfos);
 			}
-
-			TranscriptResult dto = TranscriptResult.builder()
-				.transcript(transcript)
-				.confidence(confidence)
-				.isFinal(isFinal)
-				.words(words)
-				.build();
 
 			try {
-				String json = objectMapper.writeValueAsString(dto);
-				session.sendMessage(new TextMessage(json));
+				TranscriptResult dto = TranscriptResult.builder()
+					.transcript(transcript)
+					.confidence(confidence)
+					.isFinal(isFinal)
+					.words(wordInfos)
+					.build();
+
+				session.sendMessage(new TextMessage(objectMapper.writeValueAsString(dto)));
 				log.info("[{}] 전송: {} (final: {})", session.getId(), transcript, isFinal);
+
 			} catch (IOException e) {
 				log.error("[{}] WebSocket 응답 전송 실패", session.getId(), e);
 			}
@@ -114,7 +111,7 @@ public class GoogleSttResponseObserver implements ResponseObserver<StreamingReco
 
 	@Override
 	public void onComplete() {
-		log.info("🎙STT 스트리밍 완료: {}", session.getId());
+		log.info("🎙 STT 스트리밍 완료: {}", session.getId());
 	}
 
 	@Override
