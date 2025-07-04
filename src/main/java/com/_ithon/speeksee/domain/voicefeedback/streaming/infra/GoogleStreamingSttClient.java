@@ -12,11 +12,15 @@ import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
+import com._ithon.speeksee.domain.Script.repository.ScriptRepository;
+import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.TranscriptResult;
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.WordInfoDto;
 import com._ithon.speeksee.domain.voicefeedback.streaming.model.SttSessionContext;
 import com._ithon.speeksee.domain.voicefeedback.streaming.port.StreamingSttClient;
 import com._ithon.speeksee.domain.voicefeedback.streaming.service.PracticeSaveService;
+import com._ithon.speeksee.global.infra.exception.entityException.MemberNotFoundException;
+import com._ithon.speeksee.global.infra.exception.entityException.ScriptNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.rpc.ClientStream;
@@ -59,6 +63,8 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 
 
 	private final PracticeSaveService practiceSaveService;
+	private final MemberRepository memberRepository;
+	private final ScriptRepository scriptRepository;
 
 	/**
 	 * Google Cloud Speech-to-Text 클라이언트를 초기화합니다.
@@ -70,7 +76,9 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	 */
 	public GoogleStreamingSttClient(
 		@Value("${google.credentials.path}") String credentialsPath,
-		PracticeSaveService practiceSaveService
+		PracticeSaveService practiceSaveService,
+		MemberRepository memberRepository,
+		ScriptRepository scriptRepository
 	) throws IOException {
 		GoogleCredentials credentials = GoogleCredentials
 			.fromStream(new FileInputStream(credentialsPath))
@@ -82,6 +90,8 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 
 		this.speechClient = SpeechClient.create(settings);
 		this.practiceSaveService = practiceSaveService;
+		this.memberRepository = memberRepository;
+		this.scriptRepository = scriptRepository;
 	}
 
 	/**
@@ -104,6 +114,16 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 				log.warn("[{}] WebSocket 파라미터 누락 (memberId 또는 scriptId)", session.getId());
 				session.close();
 				return;
+			}
+
+			if (!memberRepository.existsById(context.memberId)) {
+				log.warn("[{}] 존재하지 않는 memberId: {}", session.getId(), context.memberId);
+				throw new MemberNotFoundException();
+			}
+
+			if (!scriptRepository.existsById(context.scriptId)) {
+				log.warn("[{}] 존재하지 않는 scriptId: {}", session.getId(), context.scriptId);
+				throw new ScriptNotFoundException();
 			}
 
 			context.memberId = Long.parseLong(memberIdStr);

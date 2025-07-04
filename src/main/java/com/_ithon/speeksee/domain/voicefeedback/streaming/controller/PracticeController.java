@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.PracticeResponse;
 import com._ithon.speeksee.domain.voicefeedback.streaming.service.PracticeService;
+import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,20 +25,25 @@ public class PracticeController {
 
 	// [1] 사용자 연습 기록 전체 조회
 	@GetMapping("/user/{memberId}")
-	public ResponseEntity<List<PracticeResponse>> getAllByMember(@PathVariable Long memberId) {
-		return ResponseEntity.ok(practiceService.findByMemberId(memberId));
+	public ResponseEntity<ApiRes<List<PracticeResponse>>> getAllByMember(@PathVariable Long memberId) {
+		List<PracticeResponse> result = practiceService.findByMemberId(memberId);
+		return ResponseEntity.ok(ApiRes.success(result));
 	}
 
 	// [2] 단건 연습 기록 조회
 	@GetMapping("/{practiceId}")
-	public ResponseEntity<PracticeResponse> getOne(@PathVariable Long practiceId) {
-		return ResponseEntity.ok(practiceService.findById(practiceId));
+	public ResponseEntity<ApiRes<PracticeResponse>> getOne(@PathVariable Long practiceId) {
+		PracticeResponse result = practiceService.findById(practiceId);
+		return ResponseEntity.ok(ApiRes.success(result));
 	}
 
+	// [3] 연습 기록 삭제
 	@DeleteMapping("/{practiceId}")
-	public ResponseEntity<Void> delete(@PathVariable Long practiceId, @RequestParam Long memberId) {
+	public ResponseEntity<ApiRes<Void>> delete(
+		@PathVariable Long practiceId,
+		@RequestParam Long memberId
+	) {
 		practiceService.deleteById(practiceId, memberId);
-		return ResponseEntity.noContent().build();
+		return ResponseEntity.ok(ApiRes.success(null)); // 204 대신 통일된 200 반환
 	}
-
 }
