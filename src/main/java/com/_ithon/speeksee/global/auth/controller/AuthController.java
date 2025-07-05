@@ -1,8 +1,7 @@
 package com._ithon.speeksee.global.auth.controller;
 
-import java.time.Duration;
-
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,12 +9,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com._ithon.speeksee.global.auth.dto.request.LoginRequestDto;
 import com._ithon.speeksee.global.auth.dto.request.RefreshTokenRequestDto;
 import com._ithon.speeksee.global.auth.dto.response.AccessTokenResponseDto;
 import com._ithon.speeksee.global.auth.dto.response.LoginResponseDto;
 import com._ithon.speeksee.global.auth.jwt.JwtTokenProvider;
+import com._ithon.speeksee.global.auth.dto.request.GoogleOAuthRequestDto;
+import com._ithon.speeksee.global.auth.service.OAuth2LoginService;
 import com._ithon.speeksee.global.auth.service.AuthService;
+import com._ithon.speeksee.global.infra.exception.auth.SpeekseeAuthException;
+import com._ithon.speeksee.global.infra.exception.code.ErrorCode;
 import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -79,8 +81,6 @@ public class AuthController {
 		return ResponseEntity.ok(ApiRes.success(response));
 	}
 
-
-
 	@Operation(summary = "로그아웃", description = "refreshToken 쿠키를 제거하여 로그아웃합니다.")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "로그아웃 성공",
@@ -99,5 +99,4 @@ public class AuthController {
 		response.addHeader(HttpHeaders.SET_COOKIE, expiredCookie.toString());
 		return ResponseEntity.ok(ApiRes.success("로그아웃 되었습니다."));
 	}
-
 }
