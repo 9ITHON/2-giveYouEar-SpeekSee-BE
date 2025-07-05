@@ -19,6 +19,7 @@ import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
 
+import com._ithon.speeksee.domain.attendance.service.AttendanceService;
 import com._ithon.speeksee.global.auth.jwt.JwtAuthenticationFilter;
 import com._ithon.speeksee.global.auth.jwt.JwtTokenProvider;
 import com._ithon.speeksee.global.auth.jwt.LoginFilter;
@@ -39,7 +40,7 @@ public class SecurityConfig {
 	//    private final BlacklistService blacklistService;
 	private final CustomUserDetailsService customUserDetailsService;
 	private final JwtTokenProvider jwtTokenProvider;
-
+	private final AttendanceService attendanceService;
 	//    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 	//    private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
 	//    private final CustomOAuth2UserService customOAuth2UserService;
@@ -58,7 +59,7 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authManager) throws
 		Exception {
 
-		LoginFilter loginFilter = new LoginFilter(refreshTokenRepository, authManager, jwtTokenProvider, objectMapper);
+		LoginFilter loginFilter = new LoginFilter(refreshTokenRepository, authManager, jwtTokenProvider, objectMapper, attendanceService);
 		loginFilter.setFilterProcessesUrl("/api/auth/login");
 
 		http

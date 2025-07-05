@@ -70,7 +70,7 @@ global: 공통 설정, 유틸리티 등
 
 ---
 
-## 4. 브랜치 컨벤션
+4. 브랜치 컨벤션
 
 브랜치는 이슈 번호와 연결하여 생성
 
@@ -84,4 +84,20 @@ global: 공통 설정, 유틸리티 등
 23-feature/회원가입-API
 
 45-fix/로그인-버그수정
+```
+
+# 🎯 Google Cloud Speech-to-Text 키 설정 가이드
+
+> 이 문서는 `SpeekSee` 백엔드 프로젝트에서 Google Cloud Speech-to-Text API를 사용하기 위한 **로컬 개발 환경 설정 방법**을 안내합니다.
+
+---
+
+## ✅ 1. 키 파일 요청 및 저장
+
+- `google-stt-key.json`, `OPENAI_API_KEY` 파일을 팀에게 **직접 요청**하세요.
+- 이 키 파일은 **보안상 Git에 포함되지 않으며**, 외부 공유 금지입니다.
+- 받은 파일은 다음 경로에 저장해주세요:
+
+```
+<프로젝트 루트>/credentials/google-stt-key.json
 ```

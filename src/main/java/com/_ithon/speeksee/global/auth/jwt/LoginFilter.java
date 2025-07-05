@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com._ithon.speeksee.domain.attendance.service.AttendanceService;
 import com._ithon.speeksee.domain.member.dto.response.MemberInfoResponseDto;
 import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.global.auth.dto.request.LoginRequestDto;
@@ -36,6 +37,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 	private final AuthenticationManager authenticationManager;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final ObjectMapper objectMapper;
+	private final AttendanceService attendanceService;
 
 	@Override
 	public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
