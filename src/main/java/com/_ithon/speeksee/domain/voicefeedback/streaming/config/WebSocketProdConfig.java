@@ -26,10 +26,11 @@ public class WebSocketProdConfig implements WebSocketConfigurer {
 	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
 		registry
 			.addHandler(sttSocketHandler, "/ws/stt")
-			.setAllowedOrigins(
-				"https://speeksee.com",
-				"https://www.speeksee.com",
-				"https://app.speeksee.com"
-			); // 명시된 도메인만 허용
+			.setAllowedOrigins("*");
+			// .setAllowedOrigins(
+			// 	"https://speeksee.com",
+			// 	"https://www.speeksee.com",
+			// 	"https://app.speeksee.com"
+			// ); // 명시된 도메인만 허용
 	}
 }
