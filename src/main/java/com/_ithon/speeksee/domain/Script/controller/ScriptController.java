@@ -34,7 +34,7 @@ public class ScriptController {
 
 	private final ScriptService scriptService;
 
-	@Operation(summary = "대본 생성", description = "카테고리와 난이도를 받아 대본을 생성합니다.")
+	@Operation(summary = "대본 생성", description = "카테고리: NEWS(뉴스), WEATHER(날씨), SELF_INTRODUCTION(자기소개), DAILY(일상) 난이도: EASY(쉬움), MEDIUM(중간), HARD(어려움)")
 	@ApiResponse(responseCode = "200", description = "대본 생성 성공",
 		content = @Content(
 			mediaType = "application/json",
