@@ -2,7 +2,6 @@ package com._ithon.speeksee.global.config;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,7 +18,6 @@ import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
 
-import com._ithon.speeksee.domain.attendance.service.AttendanceService;
 import com._ithon.speeksee.global.auth.jwt.JwtAuthenticationFilter;
 import com._ithon.speeksee.global.auth.jwt.JwtTokenProvider;
 import com._ithon.speeksee.global.auth.jwt.LoginFilter;
@@ -30,78 +28,80 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-	private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-	//    private final JWTUtil jwtUtil;
-	private final ObjectMapper objectMapper;
-	//    private final RefreshTokenService refreshTokenService;
-	//    private final BlacklistService blacklistService;
-	private final CustomUserDetailsService customUserDetailsService;
-	private final JwtTokenProvider jwtTokenProvider;
-	private final AttendanceService attendanceService;
-	//    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-	//    private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
-	//    private final CustomOAuth2UserService customOAuth2UserService;
 
-	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-		return config.getAuthenticationManager();
-	}
+//    private final JWTUtil jwtUtil;
+   private final ObjectMapper objectMapper;
+//    private final RefreshTokenService refreshTokenService;
+//    private final BlacklistService blacklistService;
+   private final CustomUserDetailsService customUserDetailsService;
+   private final JwtTokenProvider jwtTokenProvider;
 
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
+//    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+//    private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+//    private final CustomOAuth2UserService customOAuth2UserService;
 
-	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authManager) throws
-		Exception {
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
 
-		LoginFilter loginFilter = new LoginFilter(authManager, jwtTokenProvider, objectMapper, attendanceService);
-		loginFilter.setFilterProcessesUrl("/api/auth/login");
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-		http
-			.csrf(AbstractHttpConfigurer::disable)
-			.formLogin(AbstractHttpConfigurer::disable)
-			.httpBasic(AbstractHttpConfigurer::disable)
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authManager) throws Exception {
 
-			.cors(cors -> cors.configurationSource(request -> {
-				CorsConfiguration config = new CorsConfiguration();
-				config.setAllowedOriginPatterns(List.of("*"));
-				config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-				config.setAllowCredentials(true);
-				config.setAllowedHeaders(List.of("*"));
-				config.setExposedHeaders(List.of("Authorization"));
-				config.setMaxAge(3600L);
-				return config;
-			}))
+       LoginFilter loginFilter = new LoginFilter(authManager, jwtTokenProvider, objectMapper);
+       loginFilter.setFilterProcessesUrl("/api/auth/login");
 
-			.sessionManagement(session -> session
-				.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
 
-			.authorizeHttpRequests(auth -> auth
-				.anyRequest().permitAll())
+                .cors(cors -> cors.configurationSource(request -> {
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowedOriginPatterns(List.of("*"));
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                    config.setAllowCredentials(true);
+                    config.setAllowedHeaders(List.of("*"));
+                    config.setExposedHeaders(List.of("Authorization"));
+                    config.setMaxAge(3600L);
+                    return config;
+                }))
 
-			.exceptionHandling(except -> except
-				.authenticationEntryPoint((request, response, authException) ->
-					response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")));
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-		http.addFilterBefore(loginFilter, UsernamePasswordAuthenticationFilter.class);
-		http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, customUserDetailsService),
-			UsernamePasswordAuthenticationFilter.class);
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll())
 
-		//        http.oauth2Login(oauth2 -> oauth2
-		//                .successHandler(oAuth2LoginSuccessHandler)
-		//                .failureHandler(oAuth2LoginFailureHandler)
-		//                .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-		//        );
+                .exceptionHandling(except -> except
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")));
 
-		//        http.addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class);
-		//        http.addFilterBefore(
-		//                new JwtAuthenticationFilter(jwtUtil, blacklistService, customUserDetailsService),
-		//                UsernamePasswordAuthenticationFilter.class
-		//        );
+        http.addFilterBefore(loginFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, customUserDetailsService), UsernamePasswordAuthenticationFilter.class);
 
-		return http.build();
-	}
+//        http.oauth2Login(oauth2 -> oauth2
+//                .successHandler(oAuth2LoginSuccessHandler)
+//                .failureHandler(oAuth2LoginFailureHandler)
+//                .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+//        );
+
+
+
+
+//        http.addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class);
+//        http.addFilterBefore(
+//                new JwtAuthenticationFilter(jwtUtil, blacklistService, customUserDetailsService),
+//                UsernamePasswordAuthenticationFilter.class
+//        );
+
+        return http.build();
+    }
 }

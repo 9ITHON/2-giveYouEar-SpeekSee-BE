@@ -12,7 +12,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com._ithon.speeksee.domain.attendance.service.AttendanceService;
 import com._ithon.speeksee.domain.member.dto.response.MemberInfoResponseDto;
 import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.global.auth.dto.request.LoginRequestDto;
@@ -33,7 +32,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 	private final AuthenticationManager authenticationManager;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final ObjectMapper objectMapper;
-	private final AttendanceService attendanceService;
 
 	@Override
 	public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
@@ -54,7 +52,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 	protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
 		FilterChain chain, Authentication authResult) throws IOException {
 
-		CustomUserDetails userDetails = (CustomUserDetails)authResult.getPrincipal();
+		CustomUserDetails userDetails = (CustomUserDetails) authResult.getPrincipal();
 
 		String email = userDetails.getUsername(); // 이메일값임
 		String username = authResult.getName();
@@ -65,9 +63,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
 		Member member = userDetails.getMember();
 
-		// 출석체크
-		attendanceService.attend(member);
-
 		MemberInfoResponseDto memberInfo = MemberInfoResponseDto.builder()
 			.userId(member.getId())
 			.email(member.getEmail())
@@ -75,7 +70,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 			.currentLevel(member.getCurrentLevel())
 			.consecutiveDays(member.getConsecutiveDays())
 			.totalExp(member.getTotalExp())
+			.createdAt(member.getCreatedAt()) // 선택
 			.build();
+
 
 		// ✅ 로그인 응답 DTO 생성
 		LoginResponseDto loginResponse = LoginResponseDto.builder()
