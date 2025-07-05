@@ -59,6 +59,7 @@ public class JwtTokenProvider {
 
 		return Jwts.builder()
 			.subject(email.toString())
+			.claim("email", email)
 			.claim("type", type)    // access, refresh
 			.issuedAt(now)
 			.expiration(expirationTime)

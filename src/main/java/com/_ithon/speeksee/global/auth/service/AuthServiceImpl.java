@@ -62,6 +62,28 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
+	public LoginResponseDto login(Member member) {
+		String accessToken = jwtTokenProvider.generateAccessToken(member.getEmail());
+		String refreshTokenValue  = jwtTokenProvider.generateRefreshToken(member.getEmail());
+
+		RefreshToken refreshToken = RefreshToken.builder()
+			.token(refreshTokenValue)
+			.member(member)
+			.expiryDate(LocalDateTime.now().plusDays(7))
+			.used(false)
+			.build();
+
+		refreshTokenRepository.save(refreshToken);
+
+		int expiresIn = (int)(jwtTokenProvider.getAccessTokenExpirationMs() / 1000);
+
+		MemberInfoResponseDto memberInfoDto = new MemberInfoResponseDto(member);
+
+		return new LoginResponseDto(accessToken, refreshTokenValue, expiresIn, memberInfoDto);
+	}
+
+
+	@Override
 	public LoginResponseDto refreshAccessToken(String refreshToken) {
 		// 1. 유효성 검사
 		if (refreshToken == null || refreshToken.isBlank()) {
