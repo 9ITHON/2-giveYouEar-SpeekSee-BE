@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com._ithon.speeksee.global.infra.exception.code.ErrorCode;
+import com._ithon.speeksee.global.infra.exception.entityException.MemberNotFoundException;
+import com._ithon.speeksee.global.infra.exception.entityException.ScriptNotFoundException;
 import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -52,5 +54,17 @@ public class GlobalExceptionHandler {
 		log.error("Unexpected error: ", e);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 			.body(ApiRes.failure(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_ERROR));
+	}
+
+	@ExceptionHandler(ScriptNotFoundException.class)
+	public ResponseEntity<ApiRes<Void>> handleScriptNotFound(ScriptNotFoundException e) {
+		return ResponseEntity.status(e.getStatus())
+			.body(ApiRes.failure(e.getStatus(), e.getMessage(), e.getErrorCode()));
+	}
+
+	@ExceptionHandler(MemberNotFoundException.class)
+	public ResponseEntity<ApiRes<Void>> handleMemberNotFound(MemberNotFoundException e) {
+		return ResponseEntity.status(e.getStatus())
+			.body(ApiRes.failure(e.getStatus(), e.getMessage(), e.getErrorCode()));
 	}
 }

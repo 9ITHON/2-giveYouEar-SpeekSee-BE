@@ -26,14 +26,14 @@ public class OpenAiChatClient implements LlmClient {
 	 * @return GPT-4o 모델의 응답 내용
 	 */
 	@Override
-	public String chat(String prompt) {
+	public String chat(String prompt, int maxTokens) {
 		Map<String, Object> requestBody = Map.of(
 			"model", "gpt-4o",
 			"messages", new Object[] {
 				Map.of("role", "system", "content", ""),
 				Map.of("role", "user", "content", prompt)
 			},
-			"max_tokens", 100
+			"max_tokens", maxTokens
 		);
 
 		Map<String, Object> response = openAiWebClient.post()

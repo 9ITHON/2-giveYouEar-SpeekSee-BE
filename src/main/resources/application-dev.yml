@@ -1,0 +1,71 @@
+# 📄 application-dev.yml
+
+server:
+  port: 8080
+
+spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/speeksee
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  #  data:
+  #    redis:
+  #      host: redis
+  #      port: 6379
+  #      password: ${REDIS_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+cookie:
+  secure: false
+
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  access-token-expiration: ${JWT_ACCESS_EXPIRATION}
+  refresh-token-expiration: ${JWT_REFRESH_EXPIRATION}
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
+
+springdoc:
+  swagger-ui:
+    path: /api-docs
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY}
+
+google:
+  credentials:
+    path: credentials/google-stt-key.json
+
+#  security:
+#    oauth2:
+#      client:
+#        registration:
+#          google:
+#            client-id: ${GOOGLE_CLIENT_ID}
+#            client-secret: ${GOOGLE_CLIENT_SECRET}
+#            scope:
+#              - email
+#              - profile
+
+oauth:
+  google:
+    client-id: ${GOOGLE_CLIENT_ID}
+    client-secret: ${GOOGLE_CLIENT_SECRET}
+    redirect-uri: ${REDIRECT_URL}
