@@ -81,8 +81,6 @@ public class AuthController {
 		return ResponseEntity.ok(ApiRes.success(response));
 	}
 
-
-
 	@Operation(summary = "로그아웃", description = "refreshToken 쿠키를 제거하여 로그아웃합니다.")
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "로그아웃 성공",
@@ -100,39 +98,5 @@ public class AuthController {
 
 		response.addHeader(HttpHeaders.SET_COOKIE, expiredCookie.toString());
 		return ResponseEntity.ok(ApiRes.success("로그아웃 되었습니다."));
-	}
-
-	@RestController
-	@RequestMapping("/api/auth/oauth")
-	@RequiredArgsConstructor
-	public static class OAuthController {
-
-		private final OAuth2LoginService oAuth2LoginService;
-
-		@PostMapping("/google")
-		public ResponseEntity<ApiRes<LoginResponseDto>> googleLogin(@RequestBody GoogleOAuthRequestDto request) {
-			try {
-				LoginResponseDto response = oAuth2LoginService.loginWithGoogle(request.getCode());
-				return ResponseEntity.ok(ApiRes.success(response, "Google 로그인 성공"));
-
-			} catch (SpeekseeAuthException e) {
-
-				return ResponseEntity
-					.status(e.getStatus())
-					.body(ApiRes.failure(e.getStatus(), e.getMessage(), ErrorCode.AUTH_FAIL));
-
-			} catch (IllegalArgumentException | NullPointerException e) {
-
-				return ResponseEntity
-					.badRequest()
-					.body(ApiRes.failure(HttpStatus.BAD_REQUEST, "유효하지 않은 인증 코드입니다.", ErrorCode.AUTH_FAIL));
-
-			} catch (Exception e) {
-
-				return ResponseEntity
-					.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(ApiRes.failure(HttpStatus.INTERNAL_SERVER_ERROR, "Google 로그인 처리 중 오류가 발생했습니다.", ErrorCode.INTERNAL_ERROR));
-			}
-		}
 	}
 }
