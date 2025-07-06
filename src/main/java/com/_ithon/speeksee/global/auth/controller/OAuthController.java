@@ -15,6 +15,8 @@ import com._ithon.speeksee.global.infra.exception.code.ErrorCode;
 import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,7 +30,9 @@ public class OAuthController {
 
 	private final OAuth2LoginService oAuth2LoginService;
 
-	@Operation(summary = "Google 로그인", description = "Google OAuth2 인가 코드를 이용하여 로그인하고 JWT 토큰을 반환합니다"
+
+	@Operation(summary = "Google 로그인", description = "Google OAuth2 인가 코드를 이용하여 로그인하고 JWT 토큰을 반환합니다 - 성공 응답은 기본 로그인과 같습니다"
+
 	)
 	@ApiResponses(value = {
 		@ApiResponse(
