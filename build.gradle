@@ -94,3 +94,7 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+springBoot {
+    mainClassName = 'com._ithon.speeksee.SpeekseeApplication'
+}
