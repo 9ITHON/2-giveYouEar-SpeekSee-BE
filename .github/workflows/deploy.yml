@@ -29,6 +29,7 @@ jobs:
             cd /home/ubuntu/2-giveYouEar-SpeekSee-BE
             git pull origin main
 
+            chmod +x gradlew
             ./gradlew build -x test
 
             sudo systemctl daemon-reload
