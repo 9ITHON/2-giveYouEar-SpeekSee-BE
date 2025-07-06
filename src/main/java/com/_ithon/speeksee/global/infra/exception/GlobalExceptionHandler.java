@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com._ithon.speeksee.global.infra.exception.code.ErrorCode;
 import com._ithon.speeksee.global.infra.exception.entityException.MemberNotFoundException;
+import com._ithon.speeksee.global.infra.exception.entityException.PracticeNotFoundException;
 import com._ithon.speeksee.global.infra.exception.entityException.ScriptNotFoundException;
 import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 
@@ -64,6 +65,12 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(MemberNotFoundException.class)
 	public ResponseEntity<ApiRes<Void>> handleMemberNotFound(MemberNotFoundException e) {
+		return ResponseEntity.status(e.getStatus())
+			.body(ApiRes.failure(e.getStatus(), e.getMessage(), e.getErrorCode()));
+	}
+
+	@ExceptionHandler(PracticeNotFoundException.class)
+	public ResponseEntity<ApiRes<Void>> handlePracticeNotFound(PracticeNotFoundException e) {
 		return ResponseEntity.status(e.getStatus())
 			.body(ApiRes.failure(e.getStatus(), e.getMessage(), e.getErrorCode()));
 	}
