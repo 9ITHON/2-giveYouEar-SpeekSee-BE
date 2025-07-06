@@ -30,7 +30,9 @@ public class OAuthController {
 
 	private final OAuth2LoginService oAuth2LoginService;
 
+
 	@Operation(summary = "Google 로그인", description = "Google OAuth2 인가 코드를 이용하여 로그인하고 JWT 토큰을 반환합니다 - 성공 응답은 기본 로그인과 같습니다"
+
 	)
 	@ApiResponses(value = {
 		@ApiResponse(
