@@ -22,12 +22,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Builder
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Member extends BaseTimeEntity {
 
 	@Id
@@ -50,8 +50,10 @@ public class Member extends BaseTimeEntity {
 	@Column
 	private String providerId; // 각 소셜 서비스에서 제공하는 고유 ID
 
-	private String currentLevel ="초급";
+	@Builder.Default
+	private String currentLevel = "초급";
 
+	@Builder.Default
 	private Integer totalExp = 0;
 
 	private LocalDate lastLogin;
@@ -59,6 +61,7 @@ public class Member extends BaseTimeEntity {
 	private Integer consecutiveDays;
 
 	@OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+	@Builder.Default
 	private List<Script> scripts = new ArrayList<>();
 
 	public void addScript(Script script) {
@@ -70,5 +73,4 @@ public class Member extends BaseTimeEntity {
 		scripts.remove(script);
 		script.setAuthor(null);
 	}
-
 }
