@@ -50,7 +50,7 @@ openai:
 
 google:
   credentials:
-    path: credentials/google-stt-key.json
+    path: ${GOOGLE_CREDENTIAL_PATH}
 
 
 oauth:
@@ -58,3 +58,4 @@ oauth:
     client-id: ${GOOGLE_CLIENT_ID}
     client-secret: ${GOOGLE_CLIENT_SECRET}
     redirect-uri: ${REDIRECT_URL}
+
