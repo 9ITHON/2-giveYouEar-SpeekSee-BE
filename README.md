@@ -101,4 +101,4 @@ global: 공통 설정, 유틸리티 등
 ```
 <프로젝트 루트>/credentials/google-stt-key.json
 ```
-  
+   
