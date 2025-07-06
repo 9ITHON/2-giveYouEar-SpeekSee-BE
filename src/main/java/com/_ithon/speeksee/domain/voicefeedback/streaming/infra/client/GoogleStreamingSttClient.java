@@ -153,27 +153,6 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 		}
 	}
 
-	/**
-	 * WebSocket 세션에서 쿼리 파라미터를 추출합니다.
-	 * <p>
-	 * 예: "memberId=1&scriptId=3"에서 memberId 또는 scriptId 값을 추출합니다.
-	 *
-	 * @param session WebSocket 세션
-	 * @param key     추출할 파라미터 키 (예: "memberId" 또는 "scriptId")
-	 * @return 해당 키의 값, 없으면 null
-	 */
-	private String getQueryParam(WebSocketSession session, String key) {
-		String query = session.getUri().getQuery(); // 예: "memberId=1&scriptId=3"
-		if (query == null) return null;
-
-		for (String param : query.split("&")) {
-			String[] pair = param.split("=");
-			if (pair.length == 2 && pair[0].equals(key)) {
-				return pair[1];
-			}
-		}
-		return null;
-	}
 
 	/**
 	 * WebSocket 세션에서 오디오 데이터를 수신할 때 호출됩니다.
