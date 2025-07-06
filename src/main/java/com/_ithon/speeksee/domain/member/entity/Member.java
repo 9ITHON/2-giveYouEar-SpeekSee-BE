@@ -50,14 +50,17 @@ public class Member extends BaseTimeEntity {
 	@Column
 	private String providerId; // 각 소셜 서비스에서 제공하는 고유 ID
 
-	private String currentLevel ="초급";
+	@Builder.Default
+	private String currentLevel = "초급";
 
+	@Builder.Default
 	private Integer totalExp = 0;
 
 	private LocalDate lastLogin;
 
 	private Integer consecutiveDays;
 
+	@Builder.Default
 	@OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Script> scripts = new ArrayList<>();
 

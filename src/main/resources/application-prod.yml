@@ -38,7 +38,7 @@ jwt:
 
 logging:
   level:
-    root: warn
+    root: info
 
 springdoc:
   swagger-ui:

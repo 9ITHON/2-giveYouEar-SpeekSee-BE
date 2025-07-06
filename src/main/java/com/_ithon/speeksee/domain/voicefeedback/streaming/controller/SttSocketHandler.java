@@ -15,6 +15,7 @@ import com._ithon.speeksee.global.auth.jwt.JwtTokenProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,6 +32,11 @@ public class SttSocketHandler extends BinaryWebSocketHandler {
 	private final StreamingSttService sttService;
 	private final JwtTokenProvider jwtTokenProvider; // JWT 토큰 검증을 위한 컴포넌트
 	private final ObjectMapper objectMapper; // JSON 파싱을 위한 ObjectMapper
+
+	@PostConstruct
+	public void init() {
+		log.info("🔌 WebSocket 핸들러 로딩됨");
+	}
 
 
 	@Override
