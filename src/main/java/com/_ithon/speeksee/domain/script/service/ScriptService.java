@@ -1,15 +1,15 @@
-package com._ithon.speeksee.domain.Script.service;
+package com._ithon.speeksee.domain.script.service;
 
 import java.util.List;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
-import com._ithon.speeksee.domain.Script.domain.DifficultyLevel;
-import com._ithon.speeksee.domain.Script.domain.Script;
-import com._ithon.speeksee.domain.Script.domain.ScriptCategory;
-import com._ithon.speeksee.domain.Script.port.LlmClient;
-import com._ithon.speeksee.domain.Script.repository.ScriptRepository;
+import com._ithon.speeksee.domain.script.domain.DifficultyLevel;
+import com._ithon.speeksee.domain.script.domain.Script;
+import com._ithon.speeksee.domain.script.domain.ScriptCategory;
+import com._ithon.speeksee.domain.script.port.LlmClient;
+import com._ithon.speeksee.domain.script.repository.ScriptRepository;
 import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.global.infra.exception.entityException.MemberNotFoundException;

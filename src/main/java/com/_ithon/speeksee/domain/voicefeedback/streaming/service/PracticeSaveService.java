@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com._ithon.speeksee.domain.Script.domain.Script;
-import com._ithon.speeksee.domain.Script.repository.ScriptRepository;
+import com._ithon.speeksee.domain.script.domain.Script;
+import com._ithon.speeksee.domain.script.repository.ScriptRepository;
 import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.WordInfoDto;

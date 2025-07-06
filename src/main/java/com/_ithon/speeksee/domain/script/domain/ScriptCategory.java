@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.Script.domain;
+package com._ithon.speeksee.domain.script.domain;
 
 public enum ScriptCategory {
 	NEWS("뉴스"),

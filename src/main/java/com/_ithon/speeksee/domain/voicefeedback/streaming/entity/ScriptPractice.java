@@ -3,7 +3,7 @@ package com._ithon.speeksee.domain.voicefeedback.streaming.entity;
 import java.util.ArrayList;
 import java.util.List;
 
-import com._ithon.speeksee.domain.Script.domain.Script;
+import com._ithon.speeksee.domain.script.domain.Script;
 import com._ithon.speeksee.domain.member.entity.Member;
 
 import jakarta.persistence.CascadeType;

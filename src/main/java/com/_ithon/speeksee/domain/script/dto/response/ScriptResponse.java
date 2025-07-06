@@ -1,8 +1,8 @@
-package com._ithon.speeksee.domain.Script.dto.response;
+package com._ithon.speeksee.domain.script.dto.response;
 
-import com._ithon.speeksee.domain.Script.domain.DifficultyLevel;
-import com._ithon.speeksee.domain.Script.domain.Script;
-import com._ithon.speeksee.domain.Script.domain.ScriptCategory;
+import com._ithon.speeksee.domain.script.domain.DifficultyLevel;
+import com._ithon.speeksee.domain.script.domain.Script;
+import com._ithon.speeksee.domain.script.domain.ScriptCategory;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;

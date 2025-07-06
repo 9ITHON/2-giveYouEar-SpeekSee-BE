@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import com._ithon.speeksee.domain.Script.repository.ScriptRepository;
+import com._ithon.speeksee.domain.script.repository.ScriptRepository;
 import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.response.GoogleSttResponseObserver;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender.StreamingRequestSender;

@@ -1,7 +1,7 @@
-package com._ithon.speeksee.domain.Script.dto.resquest;
+package com._ithon.speeksee.domain.script.dto.resquest;
 
-import com._ithon.speeksee.domain.Script.domain.DifficultyLevel;
-import com._ithon.speeksee.domain.Script.domain.ScriptCategory;
+import com._ithon.speeksee.domain.script.domain.DifficultyLevel;
+import com._ithon.speeksee.domain.script.domain.ScriptCategory;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;

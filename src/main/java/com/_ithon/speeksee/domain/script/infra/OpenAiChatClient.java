@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.Script.infra;
+package com._ithon.speeksee.domain.script.infra;
 
 import java.util.Map;
 
@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com._ithon.speeksee.domain.Script.port.LlmClient;
+import com._ithon.speeksee.domain.script.port.LlmClient;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

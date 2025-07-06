@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.Script.domain;
+package com._ithon.speeksee.domain.script.domain;
 
 import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.global.entity.BaseTimeEntity;

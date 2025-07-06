@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.Script.controller;
+package com._ithon.speeksee.domain.script.controller;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com._ithon.speeksee.domain.Script.domain.Script;
-import com._ithon.speeksee.domain.Script.dto.response.ScriptResponse;
-import com._ithon.speeksee.domain.Script.dto.resquest.ScriptGenerateRequest;
-import com._ithon.speeksee.domain.Script.service.ScriptService;
+import com._ithon.speeksee.domain.script.domain.Script;
+import com._ithon.speeksee.domain.script.dto.response.ScriptResponse;
+import com._ithon.speeksee.domain.script.dto.resquest.ScriptGenerateRequest;
+import com._ithon.speeksee.domain.script.service.ScriptService;
 import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.global.auth.model.CustomUserDetails;
 import com._ithon.speeksee.global.infra.exception.response.ApiRes;

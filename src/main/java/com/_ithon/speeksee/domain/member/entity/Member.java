@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-import com._ithon.speeksee.domain.Script.domain.Script;
+import com._ithon.speeksee.domain.script.domain.Script;
 import com._ithon.speeksee.global.entity.BaseTimeEntity;
 
 import jakarta.persistence.CascadeType;
