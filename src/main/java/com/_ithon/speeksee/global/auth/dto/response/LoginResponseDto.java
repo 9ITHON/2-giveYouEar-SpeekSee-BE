@@ -24,6 +24,9 @@ public class LoginResponseDto {
 	@Schema(description = "로그인한 사용자 정보")
 	private final MemberInfoResponseDto memberInfo;
 
+	@Schema(description = "추가정보(닉네임, 생년월일)을 입력이 필요한지 나타내는 flag", example = "true")
+	private final boolean needsAdditionalInfo;
+
 	public static LoginResponseDto from(String accessToken, String refreshToken, long expiresIn,
 		MemberInfoResponseDto memberInfo) {
 		return LoginResponseDto.builder()
@@ -31,6 +34,13 @@ public class LoginResponseDto {
 			.refreshToken(refreshToken)
 			.expiresIn(expiresIn)
 			.memberInfo(memberInfo)
+			.needsAdditionalInfo(false)
 			.build();
+	}
+
+	// 추가 정보 필요 응답
+	public static LoginResponseDto needsAdditionalInfo(String accessToken, String refreshToken, long expiresIn,
+		MemberInfoResponseDto member) {
+		return new LoginResponseDto(accessToken, refreshToken, expiresIn, member, true);
 	}
 }
