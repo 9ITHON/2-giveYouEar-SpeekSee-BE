@@ -22,6 +22,10 @@ public class MemberSignupService {
 			throw new SpeekseeAuthException(HttpStatus.CONFLICT, "이메일이 이미 존재합니다");
 		}
 
+		if (memberRepository.existsByNickname(signUpRequestDto.getNickname())) {
+			throw new SpeekseeAuthException(HttpStatus.CONFLICT, "닉네임이 이미 사용 중입니다");
+		}
+
 		String encodedPassword = passwordEncoder.encode(signUpRequestDto.getPassword());
 
 		Member member = signUpRequestDto.toEntity(encodedPassword);
