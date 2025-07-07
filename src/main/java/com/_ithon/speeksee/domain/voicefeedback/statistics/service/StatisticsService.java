@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.PracticeChartPoint;
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.PracticeChartResponse;
 import com._ithon.speeksee.domain.voicefeedback.streaming.entity.PeriodType;
-import com._ithon.speeksee.domain.voicefeedback.streaming.repository.ScriptPracticeRepository;
+import com._ithon.speeksee.domain.voicefeedback.practice.repository.ScriptPracticeRepository;
 
 import lombok.RequiredArgsConstructor;
 
