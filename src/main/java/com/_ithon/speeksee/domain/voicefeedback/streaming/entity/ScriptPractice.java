@@ -3,8 +3,9 @@ package com._ithon.speeksee.domain.voicefeedback.streaming.entity;
 import java.util.ArrayList;
 import java.util.List;
 
-import com._ithon.speeksee.domain.script.domain.Script;
 import com._ithon.speeksee.domain.member.entity.Member;
+import com._ithon.speeksee.domain.script.domain.Script;
+import com._ithon.speeksee.global.entity.BaseTimeEntity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -27,7 +28,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class ScriptPractice {
+public class ScriptPractice extends BaseTimeEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
