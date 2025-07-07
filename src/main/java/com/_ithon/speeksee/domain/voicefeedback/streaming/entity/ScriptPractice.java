@@ -50,9 +50,6 @@ public class ScriptPractice {
 	// 정확도 점수 (예: 0.87)
 	private double accuracy;
 
-	// 오디오 파일 경로 (옵션)
-	private String audioUrl;
-
 	// 단어별 피드백 (연관관계 주인 아님)
 	@Builder.Default
 	@OneToMany(mappedBy = "practice", cascade = CascadeType.ALL, orphanRemoval = true)

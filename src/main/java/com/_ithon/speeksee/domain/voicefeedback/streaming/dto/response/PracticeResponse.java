@@ -27,7 +27,6 @@ public class PracticeResponse {
 			.id(entity.getId())
 			.transcript(entity.getTranscript())
 			.accuracy(entity.getAccuracy())
-			.audioUrl(entity.getAudioUrl())
 			.words(
 				entity.getWordList().stream()
 					.map(word -> new PracticeWordDto(

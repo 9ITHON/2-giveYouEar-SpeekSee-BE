@@ -85,20 +85,28 @@ public class GoogleSttResponseObserver implements ResponseObserver<com.google.cl
 
 			List<WordInfoDto> wordInfos = LcsAligner.align(spokenWords, scriptWords, startTimes, endTimes);
 
-			double accuracy = wordInfos.isEmpty() ? 0.0 :
-				(double) wordInfos.stream().filter(WordInfoDto::isCorrect).count() / wordInfos.size();
+			int correct = (int) wordInfos.stream().filter(WordInfoDto::isCorrect).count();
+			int total = wordInfos.size();
+			double accuracy = total == 0 ? 0.0 : (double) correct / total;
 
 			if (isFinal && FinalResponseValidator.isMeaningfulFinalResponse(wordInfos, transcript, confidence)) {
 				practiceSaveService.save(context.memberId, context.scriptId, transcript, accuracy, wordInfos);
 			}
 
 			try {
-				TranscriptResult dto = TranscriptResult.builder()
+				TranscriptResult.TranscriptResultBuilder builder = TranscriptResult.builder()
 					.transcript(transcript)
 					.confidence(confidence)
 					.isFinal(isFinal)
-					.words(wordInfos)
-					.build();
+					.words(wordInfos);
+
+				if (isFinal) {
+					builder.correctCount(correct)
+						.totalCount(total)
+						.accuracy(accuracy);
+				}
+
+				TranscriptResult dto = builder.build();
 
 				session.sendMessage(new TextMessage(objectMapper.writeValueAsString(dto)));
 				log.info("[{}] 전송: {} (final: {})", session.getId(), transcript, isFinal);
