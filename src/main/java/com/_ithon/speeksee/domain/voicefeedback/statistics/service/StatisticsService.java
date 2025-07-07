@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.PracticeChartPoint;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.PracticeChartResponse;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.ScriptAccuracyDto;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.ScriptPracticeCountDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.entity.PeriodType;
 import com._ithon.speeksee.domain.voicefeedback.statistics.repository.ScriptPracticeRepository;
 
@@ -90,5 +92,13 @@ public class StatisticsService {
 			case SATURDAY -> "토";
 			case SUNDAY -> "일";
 		};
+	}
+
+	public List<ScriptAccuracyDto> getScriptAccuracyTrends(Long memberId, PeriodType periodType) {
+		return practiceRepository.findScriptAccuracyTrends(memberId, periodType);
+	}
+
+	public List<ScriptPracticeCountDto> getScriptPracticeCount(Long memberId, PeriodType periodType) {
+		return practiceRepository.countScriptPracticeByPeriod(memberId, periodType);
 	}
 }

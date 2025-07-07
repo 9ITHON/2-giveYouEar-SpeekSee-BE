@@ -1,5 +1,7 @@
 package com._ithon.speeksee.domain.voicefeedback.statistics.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,7 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.PracticeChartResponse;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.ScriptAccuracyDto;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.ScriptPracticeCountDto;
+import com._ithon.speeksee.domain.voicefeedback.statistics.entity.PeriodType;
 import com._ithon.speeksee.domain.voicefeedback.statistics.service.StatisticsService;
+import com._ithon.speeksee.global.auth.model.CustomUserDetails;
 import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,6 +56,28 @@ public class StatisticsController {
 	) {
 		PracticeChartResponse response = statisticsService.getPracticeChart(member.getId(), period);
 		return ResponseEntity.ok(ApiRes.success(response));
+	}
+
+	@Operation(summary = "대본별 정확도 변화 조회", description = "기간(weekly, half-year, yearly) 동안 대본별 정확도 변화를 반환합니다.")
+	@GetMapping("/accuracy-trends")
+	public ResponseEntity<ApiRes<List<ScriptAccuracyDto>>> getAccuracyTrends(
+		@AuthenticationPrincipal CustomUserDetails userDetails,
+		@RequestParam(name = "period") String periodRaw
+	) {
+		PeriodType period = PeriodType.fromString(periodRaw); // "weekly", "half-year", "yearly"
+		List<ScriptAccuracyDto> result = statisticsService.getScriptAccuracyTrends(userDetails.getUserId(), period);
+		return ResponseEntity.ok(ApiRes.success(result));
+	}
+
+	@Operation(summary = "대본별 연습 횟수 조회", description = "기간(weekly, half-year, yearly) 동안 대본별 연습 횟수를 반환합니다.")
+	@GetMapping("/practice-count")
+	public ResponseEntity<ApiRes<List<ScriptPracticeCountDto>>> getPracticeCounts(
+		@AuthenticationPrincipal CustomUserDetails userDetails,
+		@RequestParam(name = "period") String periodRaw
+	) {
+		PeriodType period = PeriodType.fromString(periodRaw);
+		List<ScriptPracticeCountDto> result = statisticsService.getScriptPracticeCount(userDetails.getUserId(), period);
+		return ResponseEntity.ok(ApiRes.success(result));
 	}
 }
 
