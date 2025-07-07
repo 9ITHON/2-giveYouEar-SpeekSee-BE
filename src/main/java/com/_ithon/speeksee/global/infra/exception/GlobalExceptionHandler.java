@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com._ithon.speeksee.global.infra.exception.auth.OAuth2AuthenticationException;
 import com._ithon.speeksee.global.infra.exception.code.ErrorCode;
 import com._ithon.speeksee.global.infra.exception.entityException.MemberNotFoundException;
 import com._ithon.speeksee.global.infra.exception.entityException.PracticeNotFoundException;
@@ -71,6 +72,12 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(PracticeNotFoundException.class)
 	public ResponseEntity<ApiRes<Void>> handlePracticeNotFound(PracticeNotFoundException e) {
+		return ResponseEntity.status(e.getStatus())
+			.body(ApiRes.failure(e.getStatus(), e.getMessage(), e.getErrorCode()));
+	}
+
+	@ExceptionHandler(OAuth2AuthenticationException.class)
+	public ResponseEntity<ApiRes<Void>> handleOAuth2AuthException(OAuth2AuthenticationException e) {
 		return ResponseEntity.status(e.getStatus())
 			.body(ApiRes.failure(e.getStatus(), e.getMessage(), e.getErrorCode()));
 	}
