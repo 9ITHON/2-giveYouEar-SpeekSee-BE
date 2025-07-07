@@ -1,8 +1,8 @@
 package com._ithon.speeksee.domain.voicefeedback.statistics.service;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -10,12 +10,11 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com._ithon.speeksee.domain.voicefeedback.statistics.dto.PracticeChartPoint;
-import com._ithon.speeksee.domain.voicefeedback.statistics.dto.PracticeChartResponse;
-import com._ithon.speeksee.domain.voicefeedback.statistics.dto.ScriptAccuracyDto;
-import com._ithon.speeksee.domain.voicefeedback.statistics.dto.ScriptPracticeCountDto;
-import com._ithon.speeksee.domain.voicefeedback.statistics.entity.PeriodType;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.DailyPracticeCountDto;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MonthlyPracticeCountDto;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.WeeklyPracticeCountDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.repository.ScriptPracticeRepository;
+import com.querydsl.core.Tuple;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,125 +24,95 @@ public class StatisticsService {
 
 	private final ScriptPracticeRepository practiceRepository;
 
-	/**
-	 * 특정 기간의 연습 통계를 가져옵니다.
-	 *
-	 * @param memberId 연습 통계를 조회할 멤버의 ID
-	 * @param period   통계 기간 (예: "WEEKLY", "HALF_YEAR", "YEARLY")
-	 * @return 연습 통계 응답 객체
-	 */
-	public PracticeChartResponse getPracticeChart(Long memberId, String period) {
-		PeriodType type = PeriodType.fromString(period);
-		LocalDate today = LocalDate.now();
-		LocalDateTime start = type.startDate(today);
+	public List<DailyPracticeCountDto> getDailyPracticeCounts(Long memberId, LocalDate startDate, LocalDate endDate) {
+		// 1. 리포지토리에서 날짜별 연습 횟수 가져오기
+		List<Tuple> result = practiceRepository.countDailyByMember(startDate, endDate, memberId);
 
-		List<PracticeChartPoint> points;
-		long initial;
+		// 2. 날짜별 raw count 매핑
+		Map<LocalDate, Long> dateToCountMap = result.stream()
+			.collect(Collectors.toMap(
+				t -> t.get(0, java.sql.Date.class).toLocalDate(),
+				t -> t.get(1, Long.class)
+			));
 
-		switch (type) {
-			case WEEKLY -> {
-				List<PracticeChartPoint> rawPoints = practiceRepository.countDailyPracticeLastWeek(memberId);
+		// 3. 누락된 날짜 채우면서 누적값 계산
+		List<DailyPracticeCountDto> cumulativeList = new ArrayList<>();
+		long cumulative = 0L;
 
-				// label이 요일명이 아니므로 변환 필요
-				Map<String, Long> dateToCount = rawPoints.stream()
-					.collect(Collectors.toMap(PracticeChartPoint::label, PracticeChartPoint::count));
-
-				points = new ArrayList<>();
-				for (int i = type.rangeCount() - 1; i >= 0; i--) {
-					LocalDate date = today.minusDays(i);
-					String dateKey = date.toString(); // e.g., "2024-07-07"
-					String label = getKoreanDayLabel(date.getDayOfWeek());
-					long count = dateToCount.getOrDefault(dateKey, 0L);
-					points.add(new PracticeChartPoint(label, count));
-				}
-			}
-			case HALF_YEAR -> {
-				points = practiceRepository.countWeeklyPracticeLastSixMonths(memberId).stream()
-					.map(p -> new PracticeChartPoint("W" + p.label(), p.count()))
-					.toList();
-			}
-			case YEARLY -> {
-				points = practiceRepository.countMonthlyPracticeLastYear(memberId);
-			}
-			default -> throw new IllegalStateException("Unexpected period: " + type);
+		for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+			long todayCount = dateToCountMap.getOrDefault(date, 0L);
+			cumulative += todayCount;
+			cumulativeList.add(new DailyPracticeCountDto(date, cumulative));
 		}
 
-		initial = practiceRepository.countDistinctScriptsBeforeDate(memberId, start);
-
-		return new PracticeChartResponse(
-			type.label(),
-			type.unitLabel(),
-			initial + points.stream().mapToLong(PracticeChartPoint::count).sum(),
-			points,
-			accumulate(points, initial)
-		);
+		return cumulativeList;
 	}
 
-	/**
-	 * 주어진 연습 포인트 리스트를 누적하여 새로운 리스트를 반환합니다.
-	 *
-	 * @param points 연습 포인트 리스트
-	 * @param start  시작 값
-	 * @return 누적된 연습 포인트 리스트
-	 */
-	private List<PracticeChartPoint> accumulate(List<PracticeChartPoint> points, long start) {
-		List<PracticeChartPoint> result = new ArrayList<>();
-		long sum = start;
-		for (PracticeChartPoint p : points) {
-			sum += p.count();
-			result.add(new PracticeChartPoint(p.label(), sum));
+	public List<WeeklyPracticeCountDto> getWeeklyPracticeCounts(Long memberId, LocalDate startDate, LocalDate endDate) {
+		List<Tuple> result = practiceRepository.countWeeklyByMember(startDate, endDate, memberId);
+
+		// (year, week) → count 매핑
+		Map<YearWeek, Long> countMap = result.stream()
+			.collect(Collectors.toMap(
+				t -> new YearWeek(
+					t.get(0, Integer.class),
+					t.get(1, Integer.class)
+				),
+				t -> t.get(2, Long.class)
+			));
+
+		// 기준 주 계산 (ISO 기준)
+		List<YearWeek> weekList = new ArrayList<>();
+		LocalDate cursor = startDate;
+		while (!cursor.isAfter(endDate)) {
+			YearWeek yw = YearWeek.from(cursor);
+			if (!weekList.contains(yw)) weekList.add(yw);
+			cursor = cursor.plusWeeks(1);
 		}
-		return result;
+
+		// 누적 합계 계산
+		List<WeeklyPracticeCountDto> resultList = new ArrayList<>();
+		long cumulative = 0L;
+		for (YearWeek yw : weekList) {
+			cumulative += countMap.getOrDefault(yw, 0L);
+			resultList.add(new WeeklyPracticeCountDto(yw.year(), yw.week(), cumulative));
+		}
+		return resultList;
 	}
 
-	/**
-	 * 요일을 한국어로 변환합니다.
-	 *
-	 * @param day 요일
-	 * @return 한국어 요일 문자열
-	 */
-	private String getKoreanDayLabel(DayOfWeek day) {
-		return switch (day) {
-			case MONDAY -> "월";
-			case TUESDAY -> "화";
-			case WEDNESDAY -> "수";
-			case THURSDAY -> "목";
-			case FRIDAY -> "금";
-			case SATURDAY -> "토";
-			case SUNDAY -> "일";
-		};
+	public List<MonthlyPracticeCountDto> getMonthlyPracticeCounts(Long memberId, LocalDate startDate, LocalDate endDate) {
+		List<Tuple> result = practiceRepository.countMonthlyByMember(startDate, endDate, memberId);
+
+		Map<YearMonth, Long> countMap = result.stream()
+			.collect(Collectors.toMap(
+				t -> YearMonth.of(t.get(0, Integer.class), t.get(1, Integer.class)),
+				t -> t.get(2, Long.class)
+			));
+
+		// 월 리스트 생성
+		List<YearMonth> monthList = new ArrayList<>();
+		YearMonth cursor = YearMonth.from(startDate);
+		YearMonth end = YearMonth.from(endDate);
+
+		while (!cursor.isAfter(end)) {
+			monthList.add(cursor);
+			cursor = cursor.plusMonths(1);
+		}
+
+		// 누적 합계 계산
+		List<MonthlyPracticeCountDto> resultList = new ArrayList<>();
+		long cumulative = 0L;
+		for (YearMonth ym : monthList) {
+			cumulative += countMap.getOrDefault(ym, 0L);
+			resultList.add(new MonthlyPracticeCountDto(ym.getYear(), ym.getMonthValue(), cumulative));
+		}
+		return resultList;
 	}
 
-	/**
-	 * 특정 멤버의 대본 연습 정확도 추세를 가져옵니다.
-	 *
-	 * @param memberId   멤버 ID
-	 * @param periodType 기간 유형 (예: WEEKLY, HALF_YEAR, YEARLY)
-	 * @return 대본 연습 정확도 추세 리스트
-	 */
-	public List<ScriptAccuracyDto> getScriptAccuracyTrends(Long memberId, PeriodType periodType) {
-		return practiceRepository.findScriptAccuracyTrends(memberId, periodType);
-	}
-
-	/**
-	 * 특정 멤버의 대본 연습 횟수를 기간별로 집계합니다.
-	 *
-	 * @param memberId   멤버 ID
-	 * @param periodType 기간 유형 (예: WEEKLY, HALF_YEAR, YEARLY)
-	 * @return 대본 연습 횟수 리스트
-	 */
-	public List<ScriptPracticeCountDto> getScriptPracticeCount(Long memberId, PeriodType periodType) {
-		return practiceRepository.countScriptPracticeByPeriod(memberId, periodType);
-	}
-
-	/**
-	 * 특정 멤버의 총 점수를 기간별로 계산합니다.
-	 *
-	 * @param memberId   멤버 ID
-	 * @param periodType 기간 유형 (예: WEEKLY, HALF_YEAR, YEARLY)
-	 * @return 총 점수 리스트
-	 */
-	public List<PracticeChartPoint> getTotalScoreOverTime(Long memberId, PeriodType periodType) {
-		return practiceRepository.calculateTotalScoreOverTime(memberId, periodType);
+	public record YearWeek(int year, int week) {
+		public static YearWeek from(LocalDate date) {
+			WeekFields wf = WeekFields.ISO;
+			return new YearWeek(date.get(wf.weekBasedYear()), date.get(wf.weekOfWeekBasedYear()));
+		}
 	}
 }

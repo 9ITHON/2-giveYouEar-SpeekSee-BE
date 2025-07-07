@@ -1,11 +1,11 @@
 package com._ithon.speeksee.domain.voicefeedback.practice.entity;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.domain.script.domain.Script;
-import com._ithon.speeksee.global.entity.BaseTimeEntity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -22,13 +22,15 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class ScriptPractice extends BaseTimeEntity {
+public class ScriptPractice {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,6 +53,10 @@ public class ScriptPractice extends BaseTimeEntity {
 	// 정확도 점수 (예: 0.87)
 	private double accuracy;
 
+	// 생성 시간
+	@Column(name = "created_at", updatable = false)
+	private LocalDateTime createdAt;
+
 	// 단어별 피드백 (연관관계 주인 아님)
 	@Builder.Default
 	@OneToMany(mappedBy = "practice", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -60,4 +66,5 @@ public class ScriptPractice extends BaseTimeEntity {
 		wordList.add(word);
 		word.setPractice(this);
 	}
+
 }
