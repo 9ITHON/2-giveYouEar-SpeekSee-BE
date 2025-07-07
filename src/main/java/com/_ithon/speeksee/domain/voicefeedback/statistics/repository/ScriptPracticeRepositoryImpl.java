@@ -5,14 +5,21 @@ import static com.querydsl.core.types.Order.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 
 import com._ithon.speeksee.domain.voicefeedback.practice.entity.QScriptPractice;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.DailyAccuracyDto;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MaxAccuracyTrendDto;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MonthlyAccuracyDto;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.WeeklyAccuracyDto;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.core.types.dsl.NumberTemplate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -85,7 +92,112 @@ public class ScriptPracticeRepositoryImpl implements ScriptPracticeRepositoryCus
 			.fetch();
 	}
 
+	@Override
+	public List<DailyAccuracyDto> findDailyAccuracy(Long scriptId, LocalDate from, LocalDate to) {
+		Expression<java.sql.Date> truncatedDate = Expressions.dateTemplate(
+			java.sql.Date.class, "date({0})", sp.createdAt
+		);
+		NumberExpression<Double> avgAccuracy = sp.accuracy.avg();
+
+		return queryFactory
+			.select(truncatedDate, avgAccuracy)
+			.from(sp)
+			.where(
+				sp.script.id.eq(scriptId),
+				sp.createdAt.between(from.atStartOfDay(), to.atTime(LocalTime.MAX))
+			)
+			.groupBy(truncatedDate)
+			.orderBy(new OrderSpecifier<>(Order.ASC, truncatedDate))
+			.fetch()
+			.stream()
+			.map(t -> new DailyAccuracyDto(
+				t.get(truncatedDate).toLocalDate(),
+				t.get(avgAccuracy)
+			))
+			.toList();
+	}
+
+	@Override
+	public List<WeeklyAccuracyDto> findWeeklyAccuracy(Long scriptId, LocalDate from, LocalDate to) {
+		Expression<java.sql.Date> weekStartDate = Expressions.dateTemplate(
+			java.sql.Date.class, "cast(date_trunc('week', {0}) as date)", sp.createdAt
+		);
+		NumberExpression<Double> avgAccuracy = sp.accuracy.avg();
+
+		return queryFactory
+			.select(weekStartDate, avgAccuracy)
+			.from(sp)
+			.where(
+				sp.script.id.eq(scriptId),
+				sp.createdAt.between(from.atStartOfDay(), to.atTime(LocalTime.MAX))
+			)
+			.groupBy(weekStartDate)
+			.orderBy(new OrderSpecifier<>(Order.ASC, weekStartDate))
+			.fetch()
+			.stream()
+			.map(t -> new WeeklyAccuracyDto(
+				t.get(weekStartDate).toLocalDate(),
+				t.get(avgAccuracy)
+			))
+			.toList();
+	}
+
+	@Override
+	public List<MonthlyAccuracyDto> findMonthlyAccuracy(Long scriptId, LocalDate from, LocalDate to) {
+		Expression<java.sql.Date> monthStartDate = Expressions.dateTemplate(
+			java.sql.Date.class, "cast(date_trunc('month', {0}) as date)", sp.createdAt
+		);
+		NumberExpression<Double> avgAccuracy = sp.accuracy.avg();
+
+		return queryFactory
+			.select(monthStartDate, avgAccuracy)
+			.from(sp)
+			.where(
+				sp.script.id.eq(scriptId),
+				sp.createdAt.between(from.atStartOfDay(), to.atTime(LocalTime.MAX))
+			)
+			.groupBy(monthStartDate)
+			.orderBy(new OrderSpecifier<>(Order.ASC, monthStartDate))
+			.fetch()
+			.stream()
+			.map(t -> new MonthlyAccuracyDto(
+				YearMonth.from(t.get(monthStartDate).toLocalDate()),
+				t.get(avgAccuracy)
+			))
+			.toList();
+	}
+
+	@Override
+	public List<MaxAccuracyTrendDto> findDailyMaxAccuracyByScript(Long scriptId) {
+		// 1. 날짜별 max(accuracy) 조회
+		Expression<java.sql.Date> truncatedDate = Expressions.dateTemplate(
+			java.sql.Date.class, "cast({0} as date)", sp.createdAt
+		);
+
+		NumberExpression<Double> maxAccuracy = sp.accuracy.max();
+
+		List<Tuple> rawMaxList = queryFactory
+			.select(truncatedDate, maxAccuracy)
+			.from(sp)
+			.where(sp.script.id.eq(scriptId))
+			.groupBy(truncatedDate)
+			.orderBy(new OrderSpecifier<>(Order.ASC, truncatedDate))
+			.fetch();
+
+		// 2. 누적 max 처리
+		List<MaxAccuracyTrendDto> result = new ArrayList<>();
+		double maxSoFar = 0.0;
+
+		for (Tuple tuple : rawMaxList) {
+			LocalDate date = tuple.get(truncatedDate).toLocalDate();  // ✅ 안전 변환
+			Double dailyMax = tuple.get(maxAccuracy);
+			if (dailyMax != null) {
+				maxSoFar = Math.max(maxSoFar, dailyMax);
+			}
+			result.add(new MaxAccuracyTrendDto(date, maxSoFar));
+		}
+
+		return result;
+	}
 
 }
-
-

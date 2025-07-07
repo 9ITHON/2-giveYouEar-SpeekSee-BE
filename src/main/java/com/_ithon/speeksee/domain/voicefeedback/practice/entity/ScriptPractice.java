@@ -54,6 +54,7 @@ public class ScriptPractice {
 	private double accuracy;
 
 	// 생성 시간
+	// TODO: 테스트용 임시 추후 BaseTimeEntity로 분리
 	@Column(name = "created_at", updatable = false)
 	private LocalDateTime createdAt;
 

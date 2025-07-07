@@ -1,6 +1,7 @@
 package com._ithon.speeksee.domain.voicefeedback.statistics.dev;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.boot.CommandLineRunner;
@@ -35,34 +36,57 @@ public class DummyPracticeDataInitializer implements CommandLineRunner {
 			.passwordHash(passwordEncoder.encode("1234secure"))
 			.build());
 
-		Script script = scriptRepository.save(Script.builder()
-			.title("테스트 대본")
-			.difficultyLevel(DifficultyLevel.MEDIUM)
-			.content("테스트 문장입니다.")
-			.author(member)
-			.build());
+		// 스크립트 3개 생성
+		List<Script> scripts = List.of(
+			scriptRepository.save(Script.builder()
+				.title("테스트 대본 1")
+				.difficultyLevel(DifficultyLevel.EASY)
+				.content("쉬운 문장입니다.")
+				.author(member)
+				.build()),
+			scriptRepository.save(Script.builder()
+				.title("테스트 대본 2")
+				.difficultyLevel(DifficultyLevel.MEDIUM)
+				.content("중간 난이도 문장.")
+				.author(member)
+				.build()),
+			scriptRepository.save(Script.builder()
+				.title("테스트 대본 3")
+				.difficultyLevel(DifficultyLevel.HARD)
+				.content("어려운 문장입니다.")
+				.author(member)
+				.build())
+		);
 
 		LocalDate today = LocalDate.now();
 
-		// 1. 최근 7일
-		generatePractices(today.minusDays(6), today, member, script);
+		for (Script script : scripts) {
+			// 최근 7일 (일부 날짜 랜덤 누락 포함)
+			generatePractices(today.minusDays(6), today, member, script, true);
 
-		// 2. 반년 전 (약 6개월 전 ~ 5개월 전)
-		generatePractices(today.minusMonths(6), today.minusMonths(5), member, script);
+			// 반년 전 (정확도 0.4 ~ 0.6)
+			generatePractices(today.minusMonths(6), today.minusMonths(5), member, script, false, 0.4, 0.6);
 
-		// 3. 1년 전 (약 12개월 전 ~ 11개월 전)
-		generatePractices(today.minusYears(1), today.minusMonths(11), member, script);
+			// 1년 전 (정확도 0.8 ~ 1.0)
+			generatePractices(today.minusYears(1), today.minusMonths(11), member, script, false, 0.8, 1.0);
+		}
 	}
 
-	private void generatePractices(LocalDate start, LocalDate end, Member member, Script script) {
+	private void generatePractices(LocalDate start, LocalDate end, Member member, Script script, boolean randomSkip) {
+		generatePractices(start, end, member, script, randomSkip, 0.7, 1.0);
+	}
+
+	private void generatePractices(LocalDate start, LocalDate end, Member member, Script script, boolean randomSkip, double minAcc, double maxAcc) {
 		for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+			if (randomSkip && ThreadLocalRandom.current().nextDouble() < 0.25) continue; // 25% 확률로 누락
+
 			int countPerDay = ThreadLocalRandom.current().nextInt(1, 4); // 하루 1~3회
 			for (int j = 0; j < countPerDay; j++) {
 				ScriptPractice practice = ScriptPractice.builder()
 					.member(member)
 					.script(script)
 					.transcript("이건 연습 텍스트입니다.")
-					.accuracy(ThreadLocalRandom.current().nextDouble(0.7, 1.0))
+					.accuracy(ThreadLocalRandom.current().nextDouble(minAcc, maxAcc))
 					.build();
 				practice.setCreatedAt(date.atTime(10 + j, 0));
 				practiceRepository.save(practice);

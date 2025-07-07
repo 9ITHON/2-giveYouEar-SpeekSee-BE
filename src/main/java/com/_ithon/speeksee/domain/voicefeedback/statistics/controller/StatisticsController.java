@@ -5,17 +5,21 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.DailyPracticeCountDto;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MaxAccuracyTrendDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MonthlyPracticeCountDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.WeeklyPracticeCountDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.entity.PeriodType;
 import com._ithon.speeksee.domain.voicefeedback.statistics.service.StatisticsService;
 import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -49,6 +53,26 @@ public class StatisticsController {
 				yield ResponseEntity.ok(ApiRes.success(result));
 			}
 		};
+	}
+
+	@Operation(summary = "정확도 변화 추이 조회", description = "scriptId를 기준으로 주어진 기간별 정확도 추이를 반환합니다.")
+	@GetMapping("/accuracy-trend")
+	public ApiRes<List<?>> getAccuracyTrend(
+		@Parameter(description = "대본 ID", example = "1")
+		@RequestParam Long scriptId,
+
+		@Parameter(description = "조회 기간 (weekly, half-year, yearly)", example = "weekly")
+		@RequestParam String period
+	) {
+		PeriodType periodType = PeriodType.fromString(period);
+		List<?> result = statisticsService.getAccuracyTrend(scriptId, periodType);
+		return ApiRes.success(result);
+	}
+
+	@GetMapping("/scripts/{scriptId}/max-accuracy-trend")
+	public ResponseEntity<ApiRes<List<MaxAccuracyTrendDto>>> getMaxAccuracyTrend(@PathVariable Long scriptId) {
+		List<MaxAccuracyTrendDto> result = statisticsService.getMaxAccuracyTrend(scriptId);
+		return ResponseEntity.ok(ApiRes.success(result, "날짜별 누적 최대 정확도 조회 성공"));
 	}
 
 }

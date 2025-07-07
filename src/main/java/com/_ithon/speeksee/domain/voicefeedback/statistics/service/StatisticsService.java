@@ -1,6 +1,7 @@
 package com._ithon.speeksee.domain.voicefeedback.statistics.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.WeekFields;
 import java.util.ArrayList;
@@ -10,9 +11,14 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.DailyAccuracyDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.DailyPracticeCountDto;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MaxAccuracyTrendDto;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MonthlyAccuracyDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MonthlyPracticeCountDto;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.WeeklyAccuracyDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.WeeklyPracticeCountDto;
+import com._ithon.speeksee.domain.voicefeedback.statistics.entity.PeriodType;
 import com._ithon.speeksee.domain.voicefeedback.statistics.repository.ScriptPracticeRepository;
 import com.querydsl.core.Tuple;
 
@@ -115,4 +121,82 @@ public class StatisticsService {
 			return new YearWeek(date.get(wf.weekBasedYear()), date.get(wf.weekOfWeekBasedYear()));
 		}
 	}
+
+	public List<?> getAccuracyTrend(Long scriptId, PeriodType periodType) {
+		LocalDate today = LocalDate.now();
+		LocalDateTime startDateTime = periodType.startDate(today);
+		LocalDate startDate = startDateTime.toLocalDate();
+		LocalDate endDate = today;
+
+		return switch (periodType) {
+			case WEEKLY -> {
+				var raw = practiceRepository.findDailyAccuracy(scriptId, startDate, endDate);
+				yield fillMissingDates(startDate, endDate, raw); // 누락 보간
+			}
+			case HALF_YEAR -> {
+				var raw = practiceRepository.findWeeklyAccuracy(scriptId, startDate, endDate);
+				yield fillMissingWeeks(startDate, endDate, raw);
+			}
+			case YEARLY -> {
+				var raw = practiceRepository.findMonthlyAccuracy(scriptId, startDate, endDate);
+				yield fillMissingMonths(startDate, endDate, raw);
+			}
+		};
+	}
+
+	private List<DailyAccuracyDto> fillMissingDates(LocalDate from, LocalDate to, List<DailyAccuracyDto> rawData) {
+		Map<LocalDate, Double> dataMap = rawData.stream()
+			.collect(Collectors.toMap(DailyAccuracyDto::date, DailyAccuracyDto::averageAccuracy));
+
+		List<DailyAccuracyDto> result = new ArrayList<>();
+		for (LocalDate date = from; !date.isAfter(to); date = date.plusDays(1)) {
+			result.add(new DailyAccuracyDto(
+				date,
+				dataMap.getOrDefault(date, null)  // null 처리 가능
+			));
+		}
+
+		return result;
+	}
+
+	private List<WeeklyAccuracyDto> fillMissingWeeks(LocalDate from, LocalDate to, List<WeeklyAccuracyDto> rawData) {
+		Map<LocalDate, Double> dataMap = rawData.stream()
+			.collect(Collectors.toMap(WeeklyAccuracyDto::weekStartDate, WeeklyAccuracyDto::averageAccuracy));
+
+		List<WeeklyAccuracyDto> result = new ArrayList<>();
+		LocalDate cursor = from.with(java.time.DayOfWeek.MONDAY);
+
+		while (!cursor.isAfter(to)) {
+			result.add(new WeeklyAccuracyDto(
+				cursor,
+				dataMap.getOrDefault(cursor, null)
+			));
+			cursor = cursor.plusWeeks(1);
+		}
+		return result;
+	}
+
+	private List<MonthlyAccuracyDto> fillMissingMonths(LocalDate from, LocalDate to, List<MonthlyAccuracyDto> rawData) {
+		Map<YearMonth, Double> dataMap = rawData.stream()
+			.collect(Collectors.toMap(MonthlyAccuracyDto::month, MonthlyAccuracyDto::averageAccuracy));
+
+		List<MonthlyAccuracyDto> result = new ArrayList<>();
+		YearMonth cursor = YearMonth.from(from);
+		YearMonth end = YearMonth.from(to);
+
+		while (!cursor.isAfter(end)) {
+			result.add(new MonthlyAccuracyDto(
+				cursor,
+				dataMap.getOrDefault(cursor, null)
+			));
+			cursor = cursor.plusMonths(1);
+		}
+		return result;
+	}
+
+	public List<MaxAccuracyTrendDto> getMaxAccuracyTrend(Long scriptId) {
+		return practiceRepository.findDailyMaxAccuracyByScript(scriptId);
+	}
+
+
 }
