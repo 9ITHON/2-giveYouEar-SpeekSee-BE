@@ -18,7 +18,6 @@ public class PracticeResponse {
 	private Long id;
 	private String transcript;
 	private double accuracy;
-	private String audioUrl;
 
 	private List<PracticeWordDto> words;
 
