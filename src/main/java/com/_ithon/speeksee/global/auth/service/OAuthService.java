@@ -37,7 +37,6 @@ public class OAuthService {
 		log.info("userInfo: {}", userInfo.getEmail());
 		Member member = Member.builder()
 			.email(userInfo.getEmail())
-			.nickname(userInfo.getName())
 			.authProvider(provider)
 			.build();
 
