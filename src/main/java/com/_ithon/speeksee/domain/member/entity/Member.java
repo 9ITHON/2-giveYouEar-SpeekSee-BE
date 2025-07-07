@@ -62,6 +62,8 @@ public class Member extends BaseTimeEntity {
 
 	private Integer consecutiveDays;
 
+	private boolean isInfoCompleted; // 추가 정보가 입력되었는지
+
 	@OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
 	@Builder.Default
 	private List<Script> scripts = new ArrayList<>();
