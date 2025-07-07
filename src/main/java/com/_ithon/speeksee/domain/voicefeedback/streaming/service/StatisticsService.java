@@ -2,6 +2,7 @@ package com._ithon.speeksee.domain.voicefeedback.streaming.service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +22,21 @@ public class StatisticsService {
 
 	private final ScriptPracticeRepository practiceRepository;
 
+	public PracticeChartResponse getPracticeChart(Long memberId, String period) {
+		LocalDate today = LocalDate.now();
+
+		return switch (period) {
+			case "weekly" -> getWeekly(memberId, today);
+			case "half-year" -> getHalfYear(memberId, today);
+			case "yearly" -> getYearly(memberId, today);
+			default -> throw new IllegalArgumentException("지원하지 않는 기간: " + period);
+		};
+	}
+
 	private PracticeChartResponse getWeekly(Long memberId, LocalDate today) {
 		List<Object[]> rows = practiceRepository.countDailyPracticeLastWeek(memberId);
+		LocalDateTime beforeStart = today.minusDays(6).atStartOfDay();
+		long initial = practiceRepository.countDistinctScriptsBeforeDate(memberId, beforeStart);
 
 		Map<LocalDate, Long> dateToCount = rows.stream()
 			.collect(Collectors.toMap(
@@ -38,7 +52,50 @@ public class StatisticsService {
 			points.add(new PracticeChartPoint(label, count));
 		}
 
-		return new PracticeChartResponse("weekly", "day", points);
+		return new PracticeChartResponse("weekly", "day",
+			initial + points.stream().mapToLong(PracticeChartPoint::count).sum(),
+			points,
+			accumulate(points, initial));
+	}
+
+	private PracticeChartResponse getHalfYear(Long memberId, LocalDate today) {
+		List<Object[]> rows = practiceRepository.countWeeklyPracticeLastSixMonths(memberId);
+		LocalDateTime beforeStart = today.minusMonths(6).atStartOfDay();
+		long initial = practiceRepository.countDistinctScriptsBeforeDate(memberId, beforeStart);
+
+		List<PracticeChartPoint> points = rows.stream()
+			.map(row -> new PracticeChartPoint("W" + row[0], ((Number) row[1]).longValue()))
+			.toList();
+
+		return new PracticeChartResponse("half-year", "week",
+			initial + points.stream().mapToLong(PracticeChartPoint::count).sum(),
+			points,
+			accumulate(points, initial));
+	}
+
+	private PracticeChartResponse getYearly(Long memberId, LocalDate today) {
+		List<Object[]> rows = practiceRepository.countMonthlyPracticeLastYear(memberId);
+		LocalDateTime beforeStart = today.minusYears(1).atStartOfDay();
+		long initial = practiceRepository.countDistinctScriptsBeforeDate(memberId, beforeStart);
+
+		List<PracticeChartPoint> points = rows.stream()
+			.map(row -> new PracticeChartPoint((String) row[0], ((Number) row[1]).longValue()))
+			.toList();
+
+		return new PracticeChartResponse("yearly", "month",
+			initial + points.stream().mapToLong(PracticeChartPoint::count).sum(),
+			points,
+			accumulate(points, initial));
+	}
+
+	private List<PracticeChartPoint> accumulate(List<PracticeChartPoint> points, long start) {
+		List<PracticeChartPoint> result = new ArrayList<>();
+		long sum = start;
+		for (PracticeChartPoint p : points) {
+			sum += p.count();
+			result.add(new PracticeChartPoint(p.label(), sum));
+		}
+		return result;
 	}
 
 	private String getKoreanDayLabel(DayOfWeek day) {
@@ -51,34 +108,5 @@ public class StatisticsService {
 			case SATURDAY -> "토";
 			case SUNDAY -> "일";
 		};
-	}
-
-	public PracticeChartResponse getPracticeChart(Long memberId, String period) {
-		LocalDate today = LocalDate.now();
-
-		return switch (period) {
-			case "weekly" -> getWeekly(memberId, today);
-			case "half-year" -> getHalfYear(memberId);
-			case "yearly" -> getYearly(memberId);
-			default -> throw new IllegalArgumentException("지원하지 않는 기간: " + period);
-		};
-	}
-
-	private PracticeChartResponse getHalfYear(Long memberId) {
-		List<Object[]> rows = practiceRepository.countWeeklyPracticeLastSixMonths(memberId);
-		List<PracticeChartPoint> points = rows.stream()
-			.map(row -> new PracticeChartPoint("W" + row[0], ((Number) row[1]).longValue()))
-			.toList();
-
-		return new PracticeChartResponse("half-year", "week", points);
-	}
-
-	private PracticeChartResponse getYearly(Long memberId) {
-		List<Object[]> rows = practiceRepository.countMonthlyPracticeLastYear(memberId);
-		List<PracticeChartPoint> points = rows.stream()
-			.map(row -> new PracticeChartPoint((String) row[0], ((Number) row[1]).longValue()))
-			.toList();
-
-		return new PracticeChartResponse("yearly", "month", points);
 	}
 }
