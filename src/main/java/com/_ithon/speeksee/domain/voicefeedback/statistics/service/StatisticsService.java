@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.streaming.service;
+package com._ithon.speeksee.domain.voicefeedback.statistics.service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.PracticeChartPoint;
-import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.PracticeChartResponse;
-import com._ithon.speeksee.domain.voicefeedback.streaming.entity.PeriodType;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.PracticeChartPoint;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.PracticeChartResponse;
+import com._ithon.speeksee.domain.voicefeedback.statistics.entity.PeriodType;
 import com._ithon.speeksee.domain.voicefeedback.practice.repository.ScriptPracticeRepository;
 
 import lombok.RequiredArgsConstructor;

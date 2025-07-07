@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.streaming.entity;
+package com._ithon.speeksee.domain.voicefeedback.statistics.entity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

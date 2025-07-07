@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.streaming.controller;
+package com._ithon.speeksee.domain.voicefeedback.statistics.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com._ithon.speeksee.domain.member.entity.Member;
-import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.PracticeChartResponse;
-import com._ithon.speeksee.domain.voicefeedback.streaming.service.StatisticsService;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.PracticeChartResponse;
+import com._ithon.speeksee.domain.voicefeedback.statistics.service.StatisticsService;
 import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 
 import io.swagger.v3.oas.annotations.Operation;

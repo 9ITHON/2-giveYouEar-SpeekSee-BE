@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.streaming.repository;
+package com._ithon.speeksee.domain.voicefeedback.practice.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com._ithon.speeksee.domain.member.entity.Member;
-import com._ithon.speeksee.domain.voicefeedback.streaming.entity.ScriptPractice;
+import com._ithon.speeksee.domain.voicefeedback.practice.entity.ScriptPractice;
 
 public interface ScriptPracticeRepository extends JpaRepository<ScriptPractice, Long> {
 

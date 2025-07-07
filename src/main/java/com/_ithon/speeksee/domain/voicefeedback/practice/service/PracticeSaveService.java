@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.streaming.service;
+package com._ithon.speeksee.domain.voicefeedback.practice.service;
 
 import java.util.List;
 
@@ -9,9 +9,9 @@ import com._ithon.speeksee.domain.script.repository.ScriptRepository;
 import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.WordInfoDto;
-import com._ithon.speeksee.domain.voicefeedback.streaming.entity.PracticeWord;
-import com._ithon.speeksee.domain.voicefeedback.streaming.entity.ScriptPractice;
-import com._ithon.speeksee.domain.voicefeedback.streaming.repository.ScriptPracticeRepository;
+import com._ithon.speeksee.domain.voicefeedback.practice.entity.PracticeWord;
+import com._ithon.speeksee.domain.voicefeedback.practice.entity.ScriptPractice;
+import com._ithon.speeksee.domain.voicefeedback.practice.repository.ScriptPracticeRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

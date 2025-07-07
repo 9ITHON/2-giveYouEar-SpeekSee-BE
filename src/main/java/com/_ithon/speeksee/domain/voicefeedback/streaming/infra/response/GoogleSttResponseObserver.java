@@ -11,7 +11,7 @@ import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.Transcrip
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.WordInfoDto;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender.WebSocketErrorSender;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionContext;
-import com._ithon.speeksee.domain.voicefeedback.streaming.service.PracticeSaveService;
+import com._ithon.speeksee.domain.voicefeedback.practice.service.PracticeSaveService;
 import com._ithon.speeksee.domain.voicefeedback.streaming.util.FinalResponseValidator;
 import com._ithon.speeksee.domain.voicefeedback.streaming.util.LcsAligner;
 import com.fasterxml.jackson.databind.ObjectMapper;

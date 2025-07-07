@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.streaming.entity;
+package com._ithon.speeksee.domain.voicefeedback.practice.entity;
 
 import java.util.ArrayList;
 import java.util.List;
