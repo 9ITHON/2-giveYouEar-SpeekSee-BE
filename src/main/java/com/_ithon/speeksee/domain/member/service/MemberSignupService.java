@@ -9,15 +9,13 @@ import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.global.infra.exception.auth.SpeekseeAuthException;
 
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 @Service
 public class MemberSignupService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
-
-	public MemberSignupService(MemberRepository memberRepository, PasswordEncoder passwordEncoder) {
-		this.memberRepository = memberRepository;
-		this.passwordEncoder = passwordEncoder;
-	}
 
 	public Member signUp(SignUpRequestDto signUpRequestDto) {
 		if (memberRepository.existsByEmail(signUpRequestDto.getEmail())) {
@@ -26,11 +24,7 @@ public class MemberSignupService {
 
 		String encodedPassword = passwordEncoder.encode(signUpRequestDto.getPassword());
 
-		Member member = Member.builder()
-			.email(signUpRequestDto.getEmail())
-			.passwordHash(encodedPassword)
-			.username(signUpRequestDto.getUsername())
-			.build();
+		Member member = signUpRequestDto.toEntity(encodedPassword);
 
 		memberRepository.save(member);
 		return member;

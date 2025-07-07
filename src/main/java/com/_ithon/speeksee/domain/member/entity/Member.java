@@ -36,13 +36,15 @@ public class Member extends BaseTimeEntity {
 	private Long id;
 
 	@Column(unique = true)
-	private String username;
+	private String nickname;
 
 	@Column(nullable = false, unique = true)
 	private String email;
 
 	@Column(nullable = true)
 	private String passwordHash;
+
+	private LocalDate birthday;
 
 	@Enumerated(EnumType.STRING)
 	private AuthProvider authProvider; // GOOGLE, KAKAO, NAVER 등

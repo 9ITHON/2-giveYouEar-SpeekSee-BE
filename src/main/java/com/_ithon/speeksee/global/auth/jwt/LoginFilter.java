@@ -67,6 +67,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 		String refreshToken = jwtTokenProvider.generateRefreshToken(email);
 		long expiresIn = jwtTokenProvider.getAccessTokenExpirationMs(); // 예: 3600초
 
+		attendanceService.attend(member);
+
 		// 리프레쉬 토큰 저장
 		RefreshToken refreshTokenEntity = buildRefreshTokenEntity(refreshToken, member);
 		refreshTokenRepository.save(refreshTokenEntity);
@@ -117,15 +119,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 	}
 
 	private MemberInfoResponseDto buildMemberInfoDto(Member member) {
-		return MemberInfoResponseDto.builder()
-			.userId(member.getId())
-			.email(member.getEmail())
-			.username(member.getUsername())
-			.currentLevel(member.getCurrentLevel())
-			.consecutiveDays(member.getConsecutiveDays())
-			.totalExp(member.getTotalExp())
-			.createdAt(member.getCreatedAt())
-			.build();
+		return MemberInfoResponseDto.from(member);
 	}
 
 	private LoginResponseDto buildLoginResponseDto(String accessToken, String refreshToken,
