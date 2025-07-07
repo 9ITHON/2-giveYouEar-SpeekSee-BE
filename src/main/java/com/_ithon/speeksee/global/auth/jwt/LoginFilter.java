@@ -62,6 +62,10 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 		Member member = userDetails.getMember();
 		String email = userDetails.getUsername(); // 이메일값임
 
+		if (!member.isInfoCompleted()) {
+			throw new IllegalStateException("폼 로그인 사용자는 추가 정보가 모두 입력되어 있어야 합니다.");
+		}
+
 		// 토큰 생성
 		String accessToken = jwtTokenProvider.generateAccessToken(email);
 		String refreshToken = jwtTokenProvider.generateRefreshToken(email);
