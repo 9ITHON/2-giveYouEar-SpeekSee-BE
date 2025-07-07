@@ -79,7 +79,7 @@ public class AuthController {
 		LoginResponseDto loginResponse = authService.refreshAccessToken(refreshToken);
 
 		// 2. 응답 DTO 생성
-		AccessTokenResponseDto response = new AccessTokenResponseDto(
+		AccessTokenResponseDto response = AccessTokenResponseDto.from(
 			loginResponse.getAccessToken(),
 			(int)loginResponse.getExpiresIn()
 		);

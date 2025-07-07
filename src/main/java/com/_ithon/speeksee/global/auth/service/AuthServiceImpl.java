@@ -30,7 +30,6 @@ public class AuthServiceImpl implements AuthService {
 	private final MemberRepository memberRepository;
 	private final RefreshTokenRepository refreshTokenRepository;
 
-
 	@Override
 	public LoginResponseDto login(LoginRequestDto loginRequestDto) {
 		Authentication authentication = authenticationManager.authenticate(
@@ -41,7 +40,7 @@ public class AuthServiceImpl implements AuthService {
 			.orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
 
 		String accessToken = jwtTokenProvider.generateAccessToken(member.getEmail());
-		String refreshTokenValue  = jwtTokenProvider.generateRefreshToken(member.getEmail());
+		String refreshTokenValue = jwtTokenProvider.generateRefreshToken(member.getEmail());
 
 		RefreshToken refreshToken = RefreshToken.builder()
 			.token(refreshTokenValue)
@@ -56,15 +55,15 @@ public class AuthServiceImpl implements AuthService {
 		int expiresIn = (int)(jwtTokenProvider.getAccessTokenExpirationMs() / 1000); // 또는 직접 상수로 설정 가능
 
 		// 6. 사용자 정보를 DTO로 변환
-		MemberInfoResponseDto memberInfoDto = new MemberInfoResponseDto(member);
+		MemberInfoResponseDto memberInfoDto = MemberInfoResponseDto.from(member);
 
-		return new LoginResponseDto(accessToken, refreshTokenValue, expiresIn, memberInfoDto);
+		return LoginResponseDto.from(accessToken, refreshTokenValue, expiresIn, memberInfoDto);
 	}
 
 	@Override
 	public LoginResponseDto login(Member member) {
 		String accessToken = jwtTokenProvider.generateAccessToken(member.getEmail());
-		String refreshTokenValue  = jwtTokenProvider.generateRefreshToken(member.getEmail());
+		String refreshTokenValue = jwtTokenProvider.generateRefreshToken(member.getEmail());
 
 		RefreshToken refreshToken = RefreshToken.builder()
 			.token(refreshTokenValue)
@@ -77,11 +76,10 @@ public class AuthServiceImpl implements AuthService {
 
 		int expiresIn = (int)(jwtTokenProvider.getAccessTokenExpirationMs() / 1000);
 
-		MemberInfoResponseDto memberInfoDto = new MemberInfoResponseDto(member);
+		MemberInfoResponseDto memberInfoDto = MemberInfoResponseDto.from(member);
 
-		return new LoginResponseDto(accessToken, refreshTokenValue, expiresIn, memberInfoDto);
+		return LoginResponseDto.from(accessToken, refreshTokenValue, expiresIn, memberInfoDto);
 	}
-
 
 	@Override
 	public LoginResponseDto refreshAccessToken(String refreshToken) {
@@ -120,9 +118,9 @@ public class AuthServiceImpl implements AuthService {
 		refreshTokenRepository.save(newToken);
 
 		int expiresIn = (int)(jwtTokenProvider.getAccessTokenExpirationMs() / 1000);
-		MemberInfoResponseDto memberInfoDto = new MemberInfoResponseDto(member);
+		MemberInfoResponseDto memberInfoDto = MemberInfoResponseDto.from(member);
 
-		return new LoginResponseDto(newAccessToken, refreshToken, expiresIn, memberInfoDto);
+		return LoginResponseDto.from(newAccessToken, newRefreshToken, expiresIn, memberInfoDto);
 	}
 
 	// @Override
