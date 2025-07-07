@@ -42,6 +42,7 @@ public class SignUpRequestDto {
 			.currentLevel("초급")
 			.totalExp(0)
 			.consecutiveDays(0)
+			.isInfoCompleted(true)
 			.build();
 	}
 }
