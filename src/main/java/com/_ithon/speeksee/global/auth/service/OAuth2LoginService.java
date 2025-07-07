@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com._ithon.speeksee.domain.attendance.service.AttendanceService;
 import com._ithon.speeksee.domain.member.dto.response.MemberInfoResponseDto;
 import com._ithon.speeksee.domain.member.entity.AuthProvider;
 import com._ithon.speeksee.domain.member.entity.Member;
@@ -22,6 +23,7 @@ public class OAuth2LoginService {
 	private final List<OAuth2Client> clients;
 	private final OAuthService oAuthService;
 	private final AuthService authService;
+	private final AttendanceService attendanceService;
 
 	public LoginResponseDto login(String code, AuthProvider authProvider) {
 
@@ -54,6 +56,9 @@ public class OAuth2LoginService {
 				MemberInfoResponseDto.from(member)
 			);
 		}
+
+		// 출석
+		attendanceService.attend(member);
 
 		// 로그인 -> jwt 발급
 		return authService.login(member);
