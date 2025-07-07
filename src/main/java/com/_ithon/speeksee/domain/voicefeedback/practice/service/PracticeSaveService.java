@@ -11,7 +11,7 @@ import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.WordInfoDto;
 import com._ithon.speeksee.domain.voicefeedback.practice.entity.PracticeWord;
 import com._ithon.speeksee.domain.voicefeedback.practice.entity.ScriptPractice;
-import com._ithon.speeksee.domain.voicefeedback.practice.repository.ScriptPracticeRepository;
+import com._ithon.speeksee.domain.voicefeedback.statistics.repository.ScriptPracticeRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

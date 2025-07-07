@@ -10,7 +10,7 @@ import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.domain.voicefeedback.practice.dto.response.PracticeResponse;
 import com._ithon.speeksee.domain.voicefeedback.practice.entity.ScriptPractice;
-import com._ithon.speeksee.domain.voicefeedback.practice.repository.ScriptPracticeRepository;
+import com._ithon.speeksee.domain.voicefeedback.statistics.repository.ScriptPracticeRepository;
 import com._ithon.speeksee.global.infra.exception.entityException.MemberNotFoundException;
 import com._ithon.speeksee.global.infra.exception.entityException.PracticeNotFoundException;
 

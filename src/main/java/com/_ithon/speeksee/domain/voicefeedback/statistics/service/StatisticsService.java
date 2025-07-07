@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.PracticeChartPoint;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.PracticeChartResponse;
 import com._ithon.speeksee.domain.voicefeedback.statistics.entity.PeriodType;
-import com._ithon.speeksee.domain.voicefeedback.practice.repository.ScriptPracticeRepository;
+import com._ithon.speeksee.domain.voicefeedback.statistics.repository.ScriptPracticeRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,32 +33,28 @@ public class StatisticsService {
 
 		switch (type) {
 			case WEEKLY -> {
-				List<Object[]> rows = practiceRepository.countDailyPracticeLastWeek(memberId);
-				Map<LocalDate, Long> dateToCount = rows.stream()
-					.collect(Collectors.toMap(
-						row -> ((java.sql.Date) row[0]).toLocalDate(),
-						row -> ((Number) row[1]).longValue()
-					));
+				List<PracticeChartPoint> rawPoints = practiceRepository.countDailyPracticeLastWeek(memberId);
+
+				// label이 요일명이 아니므로 변환 필요
+				Map<String, Long> dateToCount = rawPoints.stream()
+					.collect(Collectors.toMap(PracticeChartPoint::label, PracticeChartPoint::count));
 
 				points = new ArrayList<>();
 				for (int i = type.rangeCount() - 1; i >= 0; i--) {
 					LocalDate date = today.minusDays(i);
+					String dateKey = date.toString(); // e.g., "2024-07-07"
 					String label = getKoreanDayLabel(date.getDayOfWeek());
-					long count = dateToCount.getOrDefault(date, 0L);
+					long count = dateToCount.getOrDefault(dateKey, 0L);
 					points.add(new PracticeChartPoint(label, count));
 				}
 			}
 			case HALF_YEAR -> {
-				List<Object[]> rows = practiceRepository.countWeeklyPracticeLastSixMonths(memberId);
-				points = rows.stream()
-					.map(row -> new PracticeChartPoint("W" + row[0], ((Number) row[1]).longValue()))
+				points = practiceRepository.countWeeklyPracticeLastSixMonths(memberId).stream()
+					.map(p -> new PracticeChartPoint("W" + p.label(), p.count()))
 					.toList();
 			}
 			case YEARLY -> {
-				List<Object[]> rows = practiceRepository.countMonthlyPracticeLastYear(memberId);
-				points = rows.stream()
-					.map(row -> new PracticeChartPoint((String) row[0], ((Number) row[1]).longValue()))
-					.toList();
+				points = practiceRepository.countMonthlyPracticeLastYear(memberId);
 			}
 			default -> throw new IllegalStateException("Unexpected period: " + type);
 		}
