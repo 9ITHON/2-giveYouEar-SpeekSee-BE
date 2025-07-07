@@ -62,7 +62,14 @@ public class Member extends BaseTimeEntity {
 
 	private Integer consecutiveDays;
 
+	@Builder.Default
 	private boolean isInfoCompleted = false; // 추가 정보가 입력되었는지
+
+	public void completeAdditionalInfo(String nickname, LocalDate birthday) {
+		this.nickname = nickname;
+		this.birthday = birthday;
+		this.isInfoCompleted = true;
+	}
 
 	@OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
 	@Builder.Default
