@@ -17,6 +17,8 @@ public interface ScriptPracticeRepositoryCustom {
 
 	List<Tuple> countMonthlyByMember(LocalDate startDate, LocalDate endDate, Long memberId);
 
+	List<Tuple> countDailyByMemberAllPeriod(Long memberId);
+
 	List<DailyAccuracyDto> findDailyAccuracy(Long scriptId, LocalDate from, LocalDate to);
 
 	List<WeeklyAccuracyDto> findWeeklyAccuracy(Long scriptId, LocalDate from, LocalDate to);

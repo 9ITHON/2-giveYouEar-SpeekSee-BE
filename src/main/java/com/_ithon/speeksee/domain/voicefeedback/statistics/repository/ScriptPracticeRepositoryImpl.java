@@ -18,6 +18,7 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.DateExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.core.types.dsl.NumberTemplate;
@@ -89,6 +90,23 @@ public class ScriptPracticeRepositoryImpl implements ScriptPracticeRepositoryCus
 				new OrderSpecifier<>(Order.ASC, yearExpr),
 				new OrderSpecifier<>(Order.ASC, monthExpr)
 			)
+			.fetch();
+	}
+
+	@Override
+	public List<Tuple> countDailyByMemberAllPeriod(Long memberId) {
+		DateExpression<LocalDate> createdDate = Expressions.dateTemplate(
+			LocalDate.class,
+			"date({0})",
+			sp.createdAt
+		);
+
+		return queryFactory
+			.select(createdDate, sp.count())
+			.from(sp)
+			.where(sp.member.id.eq(memberId))
+			.groupBy(createdDate)
+			.orderBy(createdDate.asc())
 			.fetch();
 	}
 

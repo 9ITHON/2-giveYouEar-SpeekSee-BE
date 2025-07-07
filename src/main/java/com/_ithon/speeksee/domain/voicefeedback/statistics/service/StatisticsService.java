@@ -16,6 +16,7 @@ import com._ithon.speeksee.domain.voicefeedback.statistics.dto.DailyPracticeCoun
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MaxAccuracyTrendDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MonthlyAccuracyDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MonthlyPracticeCountDto;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.PracticeCountResponse;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.WeeklyAccuracyDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.WeeklyPracticeCountDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.entity.PeriodType;
@@ -113,6 +114,32 @@ public class StatisticsService {
 			resultList.add(new MonthlyPracticeCountDto(ym.getYear(), ym.getMonthValue(), cumulative));
 		}
 		return resultList;
+	}
+
+	public List<PracticeCountResponse> getAllPeriodCumulativeCounts(Long memberId) {
+		List<Tuple> result = practiceRepository.countDailyByMemberAllPeriod(memberId);
+
+		// [1] Tuple -> Map<LocalDate, Long>
+		Map<LocalDate, Long> dateToCount = result.stream()
+			.collect(Collectors.toMap(
+				t -> t.get(0, java.sql.Date.class).toLocalDate(),
+				t -> t.get(1, Long.class)
+			));
+
+		// [2] 가장 오래된 날짜 ~ 오늘까지 모든 날짜 생성
+		LocalDate startDate = dateToCount.keySet().stream().min(LocalDate::compareTo).orElse(LocalDate.now());
+		LocalDate endDate = LocalDate.now();
+
+		// [3] 누적 합산 리스트 만들기
+		List<PracticeCountResponse> cumulativeList = new ArrayList<>();
+		long cumulative = 0;
+
+		for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+			cumulative += dateToCount.getOrDefault(date, 0L);
+			cumulativeList.add(new PracticeCountResponse(date, cumulative));
+		}
+
+		return cumulativeList;
 	}
 
 	public record YearWeek(int year, int week) {

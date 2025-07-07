@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,9 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.DailyPracticeCountDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MaxAccuracyTrendDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MonthlyPracticeCountDto;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.PracticeCountResponse;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.WeeklyPracticeCountDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.entity.PeriodType;
 import com._ithon.speeksee.domain.voicefeedback.statistics.service.StatisticsService;
+import com._ithon.speeksee.global.auth.model.CustomUserDetails;
 import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,6 +56,14 @@ public class StatisticsController {
 				yield ResponseEntity.ok(ApiRes.success(result));
 			}
 		};
+	}
+
+	@GetMapping("/practice-counts/all")
+	public ResponseEntity<ApiRes<List<PracticeCountResponse>>> getAllPeriodCounts(
+		@AuthenticationPrincipal CustomUserDetails userDetails) {
+		Long memberId = userDetails.getMember().getId(); // 또는 userDetails.getId() 등
+		List<PracticeCountResponse> response = statisticsService.getAllPeriodCumulativeCounts(memberId);
+		return ResponseEntity.ok(ApiRes.success(response));
 	}
 
 	@Operation(summary = "정확도 변화 추이 조회", description = "scriptId를 기준으로 주어진 기간별 정확도 추이를 반환합니다.")
