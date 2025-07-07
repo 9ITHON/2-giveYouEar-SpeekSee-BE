@@ -1,6 +1,7 @@
 package com._ithon.speeksee.global.auth.dto.response;
 
 import com._ithon.speeksee.domain.member.dto.response.MemberInfoResponseDto;
+import com._ithon.speeksee.domain.member.entity.Member;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -24,23 +25,12 @@ public class LoginResponseDto {
 	@Schema(description = "로그인한 사용자 정보")
 	private final MemberInfoResponseDto memberInfo;
 
-	@Schema(description = "추가정보(닉네임, 생년월일)을 입력이 필요한지 나타내는 flag", example = "true")
-	private final boolean needsAdditionalInfo;
-
-	public static LoginResponseDto from(String accessToken, String refreshToken, long expiresIn,
-		MemberInfoResponseDto memberInfo) {
+	public static LoginResponseDto of(String accessToken, String refreshToken, long expiresIn, Member member) {
 		return LoginResponseDto.builder()
 			.accessToken(accessToken)
 			.refreshToken(refreshToken)
 			.expiresIn(expiresIn)
-			.memberInfo(memberInfo)
-			.needsAdditionalInfo(false)
+			.memberInfo(MemberInfoResponseDto.from(member))
 			.build();
-	}
-
-	// 추가 정보 필요 응답
-	public static LoginResponseDto needsAdditionalInfo(String accessToken, String refreshToken, long expiresIn,
-		MemberInfoResponseDto member) {
-		return new LoginResponseDto(accessToken, refreshToken, expiresIn, member, true);
 	}
 }

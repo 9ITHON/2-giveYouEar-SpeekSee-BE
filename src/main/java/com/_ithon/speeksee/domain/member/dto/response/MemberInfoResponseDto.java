@@ -36,6 +36,9 @@ public class MemberInfoResponseDto {
 	@Schema(description = "연속 출석 일수", example = "5")
 	private final Integer consecutiveDays;
 
+	@Schema(description = "추가정보(닉네임, 생년월일)을 입력이 필요한지 나타내는 flag", example = "true")
+	private final boolean infoCompleted;
+
 	@Schema(description = "계정 생성일시", example = "2025-06-20T10:00:00Z", required = false)
 	private final LocalDateTime createdAt;  // 로그인 시점에는 null이어도 됨
 
@@ -48,6 +51,7 @@ public class MemberInfoResponseDto {
 			.currentLevel(member.getCurrentLevel())
 			.totalExp(member.getTotalExp())
 			.consecutiveDays(member.getConsecutiveDays())
+			.infoCompleted(member.isInfoCompleted())
 			.createdAt(member.getCreatedAt())
 			.build();
 	}

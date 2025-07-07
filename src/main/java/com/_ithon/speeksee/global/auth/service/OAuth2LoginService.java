@@ -44,21 +44,21 @@ public class OAuth2LoginService {
 		Member member = optionalMember.orElseGet(() ->
 			oAuthService.findOrCreate(userInfo, authProvider)
 		);
+		
+		// 출석
+		attendanceService.attend(member);
 
 		// 추가 정보가 없으면, 추가 정보가 필요
 		if (!member.isInfoCompleted()) {
 			LoginResponseDto tokens = authService.login(member);
 
-			return LoginResponseDto.needsAdditionalInfo(
+			return LoginResponseDto.of(
 				tokens.getAccessToken(),
 				tokens.getRefreshToken(),
 				tokens.getExpiresIn(),
-				MemberInfoResponseDto.from(member)
+				member
 			);
 		}
-
-		// 출석
-		attendanceService.attend(member);
 
 		// 로그인 -> jwt 발급
 		return authService.login(member);

@@ -48,7 +48,7 @@ public class OAuthService {
 			.email(userInfo.getEmail())
 			.authProvider(provider)
 			.providerId(userInfo.getId())
-			.isInfoCompleted(false)
+			.infoCompleted(false)
 			.build();
 
 		return memberRepository.save(member);
