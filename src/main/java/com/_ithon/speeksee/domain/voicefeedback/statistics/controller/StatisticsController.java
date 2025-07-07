@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com._ithon.speeksee.domain.member.entity.Member;
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.PracticeChartPoint;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.PracticeChartResponse;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.ScriptAccuracyDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.ScriptPracticeCountDto;
@@ -77,6 +78,17 @@ public class StatisticsController {
 	) {
 		PeriodType period = PeriodType.fromString(periodRaw);
 		List<ScriptPracticeCountDto> result = statisticsService.getScriptPracticeCount(userDetails.getUserId(), period);
+		return ResponseEntity.ok(ApiRes.success(result));
+	}
+
+	@Operation(summary = "대본별 통합 점수 변화 조회", description = "기간(weekly, half-year, yearly)에 따른 통합 점수 변화 (정확도 * 난이도) 누적 차트를 반환합니다.")
+	@GetMapping("/total-score")
+	public ResponseEntity<ApiRes<List<PracticeChartPoint>>> getTotalScore(
+		@AuthenticationPrincipal CustomUserDetails userDetails,
+		@RequestParam(name = "period") String periodRaw
+	) {
+		PeriodType period = PeriodType.fromString(periodRaw);
+		List<PracticeChartPoint> result = statisticsService.getTotalScoreOverTime(userDetails.getUserId(), period);
 		return ResponseEntity.ok(ApiRes.success(result));
 	}
 }

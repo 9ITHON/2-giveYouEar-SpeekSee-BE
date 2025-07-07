@@ -25,6 +25,13 @@ public class StatisticsService {
 
 	private final ScriptPracticeRepository practiceRepository;
 
+	/**
+	 * 특정 기간의 연습 통계를 가져옵니다.
+	 *
+	 * @param memberId 연습 통계를 조회할 멤버의 ID
+	 * @param period   통계 기간 (예: "WEEKLY", "HALF_YEAR", "YEARLY")
+	 * @return 연습 통계 응답 객체
+	 */
 	public PracticeChartResponse getPracticeChart(Long memberId, String period) {
 		PeriodType type = PeriodType.fromString(period);
 		LocalDate today = LocalDate.now();
@@ -72,6 +79,13 @@ public class StatisticsService {
 		);
 	}
 
+	/**
+	 * 주어진 연습 포인트 리스트를 누적하여 새로운 리스트를 반환합니다.
+	 *
+	 * @param points 연습 포인트 리스트
+	 * @param start  시작 값
+	 * @return 누적된 연습 포인트 리스트
+	 */
 	private List<PracticeChartPoint> accumulate(List<PracticeChartPoint> points, long start) {
 		List<PracticeChartPoint> result = new ArrayList<>();
 		long sum = start;
@@ -82,6 +96,12 @@ public class StatisticsService {
 		return result;
 	}
 
+	/**
+	 * 요일을 한국어로 변환합니다.
+	 *
+	 * @param day 요일
+	 * @return 한국어 요일 문자열
+	 */
 	private String getKoreanDayLabel(DayOfWeek day) {
 		return switch (day) {
 			case MONDAY -> "월";
@@ -94,11 +114,36 @@ public class StatisticsService {
 		};
 	}
 
+	/**
+	 * 특정 멤버의 대본 연습 정확도 추세를 가져옵니다.
+	 *
+	 * @param memberId   멤버 ID
+	 * @param periodType 기간 유형 (예: WEEKLY, HALF_YEAR, YEARLY)
+	 * @return 대본 연습 정확도 추세 리스트
+	 */
 	public List<ScriptAccuracyDto> getScriptAccuracyTrends(Long memberId, PeriodType periodType) {
 		return practiceRepository.findScriptAccuracyTrends(memberId, periodType);
 	}
 
+	/**
+	 * 특정 멤버의 대본 연습 횟수를 기간별로 집계합니다.
+	 *
+	 * @param memberId   멤버 ID
+	 * @param periodType 기간 유형 (예: WEEKLY, HALF_YEAR, YEARLY)
+	 * @return 대본 연습 횟수 리스트
+	 */
 	public List<ScriptPracticeCountDto> getScriptPracticeCount(Long memberId, PeriodType periodType) {
 		return practiceRepository.countScriptPracticeByPeriod(memberId, periodType);
+	}
+
+	/**
+	 * 특정 멤버의 총 점수를 기간별로 계산합니다.
+	 *
+	 * @param memberId   멤버 ID
+	 * @param periodType 기간 유형 (예: WEEKLY, HALF_YEAR, YEARLY)
+	 * @return 총 점수 리스트
+	 */
+	public List<PracticeChartPoint> getTotalScoreOverTime(Long memberId, PeriodType periodType) {
+		return practiceRepository.calculateTotalScoreOverTime(memberId, periodType);
 	}
 }

@@ -13,5 +13,6 @@ public interface ScriptPracticeRepositoryCustom {
 	List<PracticeChartPoint> countMonthlyPracticeLastYear(Long memberId);
 	List<ScriptAccuracyDto> findScriptAccuracyTrends(Long memberId, PeriodType periodType);
 	List<ScriptPracticeCountDto> countScriptPracticeByPeriod(Long memberId, PeriodType periodType);
+	List<PracticeChartPoint> calculateTotalScoreOverTime(Long memberId, PeriodType periodType);
 
 }

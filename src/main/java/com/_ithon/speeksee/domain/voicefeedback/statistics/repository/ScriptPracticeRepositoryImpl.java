@@ -7,16 +7,19 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com._ithon.speeksee.domain.script.domain.DifficultyLevel;
 import com._ithon.speeksee.domain.voicefeedback.practice.entity.QScriptPractice;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.PracticeChartPoint;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.ScriptAccuracyDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.ScriptPracticeCountDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.entity.PeriodType;
 import com._ithon.speeksee.domain.voicefeedback.statistics.util.LabelConverter;
+import com._ithon.speeksee.domain.voicefeedback.statistics.util.ScoreUtil;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.ConstantImpl;
 import com.querydsl.core.types.Expression;
@@ -214,6 +217,55 @@ public class ScriptPracticeRepositoryImpl implements ScriptPracticeRepositoryCus
 			}
 
 			result.add(new ScriptPracticeCountDto(scriptId, scriptTitle, points));
+		}
+
+		return result;
+	}
+
+	@Override
+	public List<PracticeChartPoint> calculateTotalScoreOverTime(Long memberId, PeriodType periodType) {
+		LocalDateTime startDate = periodType.startDate(LocalDate.now());
+
+		// 쿼리: scriptId, difficulty, MAX(accuracy), MIN(createdAt)
+		List<Tuple> results = queryFactory
+			.select(
+				script.id,
+				script.difficultyLevel,
+				scriptPractice.accuracy.max(),
+				scriptPractice.createdAt.min()
+			)
+			.from(scriptPractice)
+			.join(scriptPractice.script, script)
+			.where(
+				scriptPractice.member.id.eq(memberId),
+				scriptPractice.createdAt.goe(startDate)
+			)
+			.groupBy(script.id, script.difficultyLevel)
+			.fetch();
+
+		// Map<String date, Long score>
+		Map<String, Long> scoreByDate = new HashMap<>();
+
+		for (Tuple tuple : results) {
+			DifficultyLevel level = tuple.get(script.difficultyLevel);
+			int difficultyScore = ScoreUtil.difficultyToScore(level);
+
+			double maxAccuracy = tuple.get(scriptPractice.accuracy.max());
+			long score = Math.round(maxAccuracy * difficultyScore);
+
+			LocalDate date = tuple.get(scriptPractice.createdAt.min()).toLocalDate();
+			String label = date.toString();
+
+			scoreByDate.merge(label, score, Long::sum);
+		}
+
+		// 누적 합산
+		List<PracticeChartPoint> result = new ArrayList<>();
+		long cumulative = 0;
+
+		for (String date : scoreByDate.keySet().stream().sorted().toList()) {
+			cumulative += scoreByDate.get(date);
+			result.add(new PracticeChartPoint(date, cumulative));
 		}
 
 		return result;
