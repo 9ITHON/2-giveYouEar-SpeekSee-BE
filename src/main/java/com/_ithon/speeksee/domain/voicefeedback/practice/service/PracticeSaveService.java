@@ -55,6 +55,7 @@ public class PracticeSaveService {
 
 		// 4. 저장
 		practiceRepository.save(practice);
+		script.increasePracticeCount();
 	}
 }
 

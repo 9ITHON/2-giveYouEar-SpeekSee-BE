@@ -46,4 +46,15 @@ public class Script extends BaseTimeEntity {
 
 	@Enumerated(EnumType.STRING)
 	private DifficultyLevel difficultyLevel;
+
+	@Column(nullable = false)
+	private int practiceCount;
+
+	public void increasePracticeCount() {
+		this.practiceCount += 1;
+	}
+
+	public void decreasePracticeCount() {
+		this.practiceCount = Math.max(0, this.practiceCount - 1);
+	}
 }

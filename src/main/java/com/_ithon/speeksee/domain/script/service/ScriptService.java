@@ -55,6 +55,7 @@ public class ScriptService {
 			.category(category)
 			.difficultyLevel(difficultyLevel)
 			.author(member)
+			.practiceCount(0)
 			.build();
 
 		member.addScript(script); // 이제 영속 상태의 member라 문제 없음
