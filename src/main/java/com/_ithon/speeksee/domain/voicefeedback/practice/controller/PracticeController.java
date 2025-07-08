@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.streaming.controller;
+package com._ithon.speeksee.domain.voicefeedback.practice.controller;
 
 import java.util.List;
 
@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.PracticeResponse;
-import com._ithon.speeksee.domain.voicefeedback.streaming.service.PracticeService;
+import com._ithon.speeksee.domain.voicefeedback.practice.dto.response.PracticeResponse;
+import com._ithon.speeksee.domain.voicefeedback.practice.service.PracticeService;
 import com._ithon.speeksee.global.auth.model.CustomUserDetails;
 import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 

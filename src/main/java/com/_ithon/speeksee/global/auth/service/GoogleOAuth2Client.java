@@ -14,6 +14,9 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import com._ithon.speeksee.domain.member.entity.AuthProvider;
+import com._ithon.speeksee.global.auth.dto.response.GoogleUserInfo;
+import com._ithon.speeksee.global.auth.dto.response.OAuth2UserInfo;
 import com._ithon.speeksee.global.infra.exception.auth.SpeekseeAuthException;
 
 import lombok.RequiredArgsConstructor;
@@ -22,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Component
 @Slf4j
-public class GoogleOAuth2Client {
+public class GoogleOAuth2Client implements OAuth2Client {
 
 	@Value("${oauth.google.client-id}")
 	private String clientId;
@@ -35,7 +38,7 @@ public class GoogleOAuth2Client {
 
 	private final RestTemplate restTemplate = new RestTemplate(); //외부 API 서버와 데이터를 주고받을 때 주로 사용
 
-	public String getAccessToken(String code){
+	public String getAccessToken(String code) {
 		String tokenUrl = "https://oauth2.googleapis.com/token";
 
 		HttpHeaders headers = new HttpHeaders();
@@ -61,17 +64,16 @@ public class GoogleOAuth2Client {
 		ResponseEntity<Map> response = restTemplate.postForEntity(
 			"https://oauth2.googleapis.com/token", request, Map.class);
 
-
 		// 구글로부터 받은 access token
 		if (response.getStatusCode() == HttpStatus.OK) {
-			return (String) response.getBody().get("access_token");
+			return (String)response.getBody().get("access_token");
 		} else {
 			throw new SpeekseeAuthException(HttpStatus.BAD_REQUEST, "Google OAuth2 토큰 요청 실패: " + response);
 		}
 	}
 
 	// 받은 accessToken으로 사용자 정보 요청
-	public Map<String, Object> getUserInfo(String accessToken) {
+	public OAuth2UserInfo getUserInfo(String accessToken) {
 		String userInfoUrl = "https://www.googleapis.com/oauth2/v2/userinfo";
 
 		HttpHeaders headers = new HttpHeaders();
@@ -90,6 +92,12 @@ public class GoogleOAuth2Client {
 			throw new RuntimeException("Google 사용자 정보 요청 실패: " + response);
 		}
 
-		return response.getBody();
+		Map<String, Object> attributes = response.getBody();
+		return OAuth2UserInfo.of(AuthProvider.GOOGLE, attributes);
+	}
+
+	@Override
+	public AuthProvider getProvider() {
+		return AuthProvider.GOOGLE;
 	}
 }

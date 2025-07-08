@@ -36,13 +36,15 @@ public class Member extends BaseTimeEntity {
 	private Long id;
 
 	@Column(unique = true)
-	private String username;
+	private String nickname;
 
 	@Column(nullable = false, unique = true)
 	private String email;
 
 	@Column(nullable = true)
 	private String passwordHash;
+
+	private LocalDate birthday;
 
 	@Enumerated(EnumType.STRING)
 	private AuthProvider authProvider; // GOOGLE, KAKAO, NAVER 등
@@ -59,6 +61,15 @@ public class Member extends BaseTimeEntity {
 	private LocalDate lastLogin;
 
 	private Integer consecutiveDays;
+
+	@Builder.Default
+	private boolean infoCompleted = false; // 추가 정보가 입력되었는지
+
+	public void completeAdditionalInfo(String nickname, LocalDate birthday) {
+		this.nickname = nickname;
+		this.birthday = birthday;
+		this.infoCompleted = true;
+	}
 
 	@OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
 	@Builder.Default

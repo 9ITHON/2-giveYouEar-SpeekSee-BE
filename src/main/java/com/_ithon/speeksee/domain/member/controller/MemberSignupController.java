@@ -22,17 +22,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "일반 회원가입", description = "회원가입")
 public class MemberSignupController {
 
 	private final MemberSignupService memberSignupService;
-
-	public MemberSignupController(MemberSignupService memberSignupService) {
-		this.memberSignupService = memberSignupService;
-	}
 
 	@PostMapping("/signup")
 	@Operation(
@@ -68,11 +66,7 @@ public class MemberSignupController {
 	public ResponseEntity<ApiRes<SignUpResponseDto>> signup(@RequestBody @Valid SignUpRequestDto signUpRequestDto) {
 		Member member = memberSignupService.signUp(signUpRequestDto); // ✅ 결과 받기
 
-		SignUpResponseDto response = SignUpResponseDto.builder()
-			.userId(member.getId())
-			.email(member.getEmail())
-			.username(member.getUsername())
-			.build();
+		SignUpResponseDto response = SignUpResponseDto.from(member);
 
 		return ResponseEntity.ok(ApiRes.success(response));
 	}

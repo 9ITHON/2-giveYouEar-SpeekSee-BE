@@ -6,7 +6,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
-import com._ithon.speeksee.domain.voicefeedback.streaming.controller.SttSocketHandler;
+import com._ithon.speeksee.domain.voicefeedback.streaming.handler.SttSocketHandler;
 
 import lombok.RequiredArgsConstructor;
 

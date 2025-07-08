@@ -30,4 +30,13 @@ public class TranscriptResult {
 
 	@Schema(description = "인식된 단어 및 타이밍 정보 리스트")
 	private List<WordInfoDto> words;
+
+	@Schema(description = "맞은 단어 수", example = "4")
+	private Integer correctCount;
+
+	@Schema(description = "전체 단어 수", example = "5")
+	private Integer totalCount;
+
+	@Schema(description = "정확도 비율 (0.0 ~ 1.0)", example = "0.8")
+	private Double accuracy;
 }

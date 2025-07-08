@@ -17,7 +17,7 @@ import com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender.WebSocket
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionManager;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionContext;
 import com._ithon.speeksee.domain.voicefeedback.streaming.port.StreamingSttClient;
-import com._ithon.speeksee.domain.voicefeedback.streaming.service.PracticeSaveService;
+import com._ithon.speeksee.domain.voicefeedback.practice.service.PracticeSaveService;
 import com._ithon.speeksee.global.infra.exception.entityException.MemberNotFoundException;
 import com._ithon.speeksee.global.infra.exception.entityException.ScriptNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
