@@ -30,6 +30,9 @@ public class ScriptResponse {
 	@Schema(description = "작성자 이메일", example = "user@example.com")
 	private String authorEmail;
 
+	@Schema(description = "스크립트 누적 연습 횟수", example = "7")
+	private int practiceCount;
+
 	public static ScriptResponse from(Script script) {
 		return ScriptResponse.builder()
 			.id(script.getId())
@@ -38,6 +41,7 @@ public class ScriptResponse {
 			.category(script.getCategory())
 			.difficulty(script.getDifficultyLevel())
 			.authorEmail(script.getAuthor().getEmail())
+			.practiceCount(script.getPracticeCount())
 			.build();
 	}
 }

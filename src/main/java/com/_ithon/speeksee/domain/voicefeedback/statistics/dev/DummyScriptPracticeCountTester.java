@@ -56,9 +56,12 @@ public class DummyScriptPracticeCountTester implements CommandLineRunner {
 					.accuracy(ThreadLocalRandom.current().nextDouble(0.6, 0.95))
 					.build();
 
-				practiceRepository.save(practice);
 				script.increasePracticeCount();
+				System.out.println("대본: " + script.getTitle() + ", 연습 횟수: " + script.getPracticeCount());
+				practiceRepository.save(practice);
+
 			}
+			scriptRepository.save(script);
 		}
 	}
 
