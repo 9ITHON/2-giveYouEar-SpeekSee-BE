@@ -27,4 +27,5 @@ public interface ScriptPracticeRepositoryCustom {
 
 	List<MaxAccuracyTrendDto> findDailyMaxAccuracyByScript(Long scriptId);
 
+	List<Tuple> findDailyScoreByMemberAllPeriod(Long memberId);
 }

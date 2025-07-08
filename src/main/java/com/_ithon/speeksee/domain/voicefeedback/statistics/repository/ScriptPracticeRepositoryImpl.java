@@ -1,5 +1,6 @@
 package com._ithon.speeksee.domain.voicefeedback.statistics.repository;
 
+import static com._ithon.speeksee.domain.script.domain.QScript.*;
 import static com._ithon.speeksee.domain.voicefeedback.practice.entity.QScriptPractice.*;
 import static com.querydsl.core.types.Order.*;
 
@@ -9,6 +10,7 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
+import com._ithon.speeksee.domain.script.domain.DifficultyLevel;
 import com._ithon.speeksee.domain.voicefeedback.practice.entity.QScriptPractice;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.DailyAccuracyDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MaxAccuracyTrendDto;
@@ -18,6 +20,7 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.DateExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
@@ -216,6 +219,31 @@ public class ScriptPracticeRepositoryImpl implements ScriptPracticeRepositoryCus
 		}
 
 		return result;
+	}
+
+	public List<Tuple> findDailyScoreByMemberAllPeriod(Long memberId) {
+		// 날짜별로 점수를 합산해서 반환
+		Expression<LocalDate> createdDate = Expressions.dateTemplate(
+			LocalDate.class,
+			"date({0})",
+			sp.createdAt
+		);
+
+		NumberExpression<Double> scoreExpr = new CaseBuilder()
+			.when(sp.script.difficultyLevel.eq(DifficultyLevel.EASY)).then(1.0)
+			.when(sp.script.difficultyLevel.eq(DifficultyLevel.MEDIUM)).then(2.0)
+			.when(sp.script.difficultyLevel.eq(DifficultyLevel.HARD)).then(3.0)
+			.otherwise(0.0)
+			.multiply(sp.accuracy);
+
+		return queryFactory
+			.select(createdDate, scoreExpr.sum())
+			.from(sp)
+			.join(sp.script, script)
+			.where(sp.member.id.eq(memberId))
+			.groupBy(createdDate)
+			.orderBy(new OrderSpecifier<>(Order.ASC, createdDate))
+			.fetch();
 	}
 
 }

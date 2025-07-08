@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.CumulativeScoreDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.DailyPracticeCountDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MaxAccuracyTrendDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MonthlyPracticeCountDto;
@@ -84,6 +85,13 @@ public class StatisticsController {
 	public ResponseEntity<ApiRes<List<MaxAccuracyTrendDto>>> getMaxAccuracyTrend(@PathVariable Long scriptId) {
 		List<MaxAccuracyTrendDto> result = statisticsService.getMaxAccuracyTrend(scriptId);
 		return ResponseEntity.ok(ApiRes.success(result, "날짜별 누적 최대 정확도 조회 성공"));
+	}
+
+	@GetMapping("/me/cumulative-score")
+	public ResponseEntity<ApiRes<List<CumulativeScoreDto>>> getAllCumulativeScore(@AuthenticationPrincipal CustomUserDetails userDetails) {
+		Long memberId = userDetails.getMember().getId();
+		List<CumulativeScoreDto> result = statisticsService.getAllPeriodCumulativeScores(memberId);
+		return ResponseEntity.ok(ApiRes.success(result));
 	}
 
 }

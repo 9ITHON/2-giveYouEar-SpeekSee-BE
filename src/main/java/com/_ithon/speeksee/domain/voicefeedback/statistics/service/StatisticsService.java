@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com._ithon.speeksee.domain.voicefeedback.statistics.dto.CumulativeScoreDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.DailyAccuracyDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.DailyPracticeCountDto;
 import com._ithon.speeksee.domain.voicefeedback.statistics.dto.MaxAccuracyTrendDto;
@@ -225,5 +226,22 @@ public class StatisticsService {
 		return practiceRepository.findDailyMaxAccuracyByScript(scriptId);
 	}
 
+	public List<CumulativeScoreDto> getAllPeriodCumulativeScores(Long memberId) {
+		List<Tuple> dailyScores = practiceRepository.findDailyScoreByMemberAllPeriod(memberId);
+
+		List<CumulativeScoreDto> result = new ArrayList<>();
+		double cumulative = 0.0;
+
+		for (Tuple tuple : dailyScores) {
+			java.sql.Date sqlDate = tuple.get(0, java.sql.Date.class);
+			Double score = tuple.get(1, Double.class);
+
+			if (sqlDate != null && score != null) {
+				cumulative += score;
+				result.add(new CumulativeScoreDto(sqlDate.toLocalDate(), cumulative));
+			}
+		}
+		return result;
+	}
 
 }
