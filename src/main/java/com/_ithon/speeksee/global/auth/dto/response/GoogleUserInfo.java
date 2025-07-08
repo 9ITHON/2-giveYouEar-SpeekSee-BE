@@ -2,12 +2,14 @@ package com._ithon.speeksee.global.auth.dto.response;
 
 import java.util.Map;
 
+import com._ithon.speeksee.domain.member.entity.AuthProvider;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class GoogleUserInfoResponseDto implements OAuth2UserInfo {
+public class GoogleUserInfo implements OAuth2UserInfo {
 
 	private Map<String, Object> attributes;
 
@@ -17,12 +19,12 @@ public class GoogleUserInfoResponseDto implements OAuth2UserInfo {
 	}
 
 	@Override
-	public final String getName() {
-		return (String)attributes.get("name");
+	public String getId() {
+		return (String)attributes.get("id");
 	}
 
 	@Override
-	public final Map<String, Object> getAttributes() {
-		return attributes;
+	public AuthProvider getProvider() {
+		return AuthProvider.GOOGLE;
 	}
 }

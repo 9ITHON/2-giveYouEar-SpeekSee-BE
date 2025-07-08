@@ -1,6 +1,7 @@
 package com._ithon.speeksee.global.auth.dto.response;
 
 import com._ithon.speeksee.domain.member.dto.response.MemberInfoResponseDto;
+import com._ithon.speeksee.domain.member.entity.Member;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -24,13 +25,12 @@ public class LoginResponseDto {
 	@Schema(description = "로그인한 사용자 정보")
 	private final MemberInfoResponseDto memberInfo;
 
-	public static LoginResponseDto from(String accessToken, String refreshToken, long expiresIn,
-		MemberInfoResponseDto memberInfo) {
+	public static LoginResponseDto of(String accessToken, String refreshToken, long expiresIn, Member member) {
 		return LoginResponseDto.builder()
 			.accessToken(accessToken)
 			.refreshToken(refreshToken)
 			.expiresIn(expiresIn)
-			.memberInfo(memberInfo)
+			.memberInfo(MemberInfoResponseDto.from(member))
 			.build();
 	}
 }

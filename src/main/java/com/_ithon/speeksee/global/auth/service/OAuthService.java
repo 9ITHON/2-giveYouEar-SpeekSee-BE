@@ -1,5 +1,7 @@
 package com._ithon.speeksee.global.auth.service;
 
+import java.util.Optional;
+
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.stereotype.Service;
 
@@ -18,28 +20,41 @@ public class OAuthService {
 
 	private final MemberRepository memberRepository;
 
+	/**
+	 * 소셜 로그인 사용자 처리: 이메일 기준으로 기존 회원인지 판단하고,
+	 * provider 불일치 시 예외, 없으면 신규 등록
+	 */
 	public Member findOrCreate(OAuth2UserInfo userInfo, AuthProvider provider) {
 		String email = userInfo.getEmail();
 
 		return memberRepository.findByEmail(email)
 			.map(existing -> {
-				// 이미 존재하는데 provider가 다르면 예외 처리
-				if (!existing.getAuthProvider().equals(provider)) {
-					throw new OAuth2AuthenticationException("다른 소셜 계정으로 가입된 이메일입니다.");
-				}
+				validateProviderMatch(existing, provider);
 				return existing;
 			})
 			.orElseGet(() -> registerNewUser(userInfo, provider));
 	}
 
+	private void validateProviderMatch(Member existing, AuthProvider provider) {
+		if (!existing.getAuthProvider().equals(provider)) {
+			throw new OAuth2AuthenticationException(
+				String.format("해당 이메일은 이미 %s 계정으로 가입되어 있습니다.", existing.getAuthProvider().name()));
+		}
+	}
+
 	private Member registerNewUser(OAuth2UserInfo userInfo, AuthProvider provider) {
-		log.info("registerNewUser");
-		log.info("userInfo: {}", userInfo.getEmail());
+		log.info("신규 사용자 등록 - email: {}, provider: {}", userInfo.getEmail(), provider);
 		Member member = Member.builder()
 			.email(userInfo.getEmail())
 			.authProvider(provider)
+			.providerId(userInfo.getId())
+			.infoCompleted(false)
 			.build();
 
 		return memberRepository.save(member);
+	}
+
+	public Optional<Member> findByProviderIdAndProvider(String providerId, AuthProvider provider) {
+		return memberRepository.findByProviderIdAndAuthProvider(providerId, provider);
 	}
 }

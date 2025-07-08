@@ -54,10 +54,7 @@ public class AuthServiceImpl implements AuthService {
 		// 5. access token 만료 시간 (예: ms 단위 → s 단위 변환)
 		int expiresIn = (int)(jwtTokenProvider.getAccessTokenExpirationMs() / 1000); // 또는 직접 상수로 설정 가능
 
-		// 6. 사용자 정보를 DTO로 변환
-		MemberInfoResponseDto memberInfoDto = MemberInfoResponseDto.from(member);
-
-		return LoginResponseDto.from(accessToken, refreshTokenValue, expiresIn, memberInfoDto);
+		return LoginResponseDto.of(accessToken, refreshTokenValue, expiresIn, member);
 	}
 
 	@Override
@@ -76,9 +73,7 @@ public class AuthServiceImpl implements AuthService {
 
 		int expiresIn = (int)(jwtTokenProvider.getAccessTokenExpirationMs() / 1000);
 
-		MemberInfoResponseDto memberInfoDto = MemberInfoResponseDto.from(member);
-
-		return LoginResponseDto.from(accessToken, refreshTokenValue, expiresIn, memberInfoDto);
+		return LoginResponseDto.of(accessToken, refreshTokenValue, expiresIn, member);
 	}
 
 	@Override
@@ -118,9 +113,8 @@ public class AuthServiceImpl implements AuthService {
 		refreshTokenRepository.save(newToken);
 
 		int expiresIn = (int)(jwtTokenProvider.getAccessTokenExpirationMs() / 1000);
-		MemberInfoResponseDto memberInfoDto = MemberInfoResponseDto.from(member);
 
-		return LoginResponseDto.from(newAccessToken, newRefreshToken, expiresIn, memberInfoDto);
+		return LoginResponseDto.of(newAccessToken, newRefreshToken, expiresIn, member);
 	}
 
 	// @Override

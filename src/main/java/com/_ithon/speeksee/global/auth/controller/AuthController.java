@@ -3,7 +3,6 @@ package com._ithon.speeksee.global.auth.controller;
 import java.time.Duration;
 
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,16 +15,11 @@ import com._ithon.speeksee.global.auth.dto.request.RefreshTokenRequestDto;
 import com._ithon.speeksee.global.auth.dto.response.AccessTokenResponseDto;
 import com._ithon.speeksee.global.auth.dto.response.LoginResponseDto;
 import com._ithon.speeksee.global.auth.jwt.JwtTokenProvider;
-import com._ithon.speeksee.global.auth.dto.request.GoogleOAuthRequestDto;
-import com._ithon.speeksee.global.auth.service.OAuth2LoginService;
 import com._ithon.speeksee.global.auth.service.AuthService;
-import com._ithon.speeksee.global.infra.exception.auth.SpeekseeAuthException;
-import com._ithon.speeksee.global.infra.exception.code.ErrorCode;
 import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
