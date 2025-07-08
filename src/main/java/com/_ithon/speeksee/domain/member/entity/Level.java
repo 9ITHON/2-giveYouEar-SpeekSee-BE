@@ -7,9 +7,9 @@ public enum Level {
 
 	public static Level determineLevel(double accuracy) {
 		double score = accuracy * 100;
-		if (score >= 90.0)
-			return Advanced;
 		if (score >= 80.0)
+			return Advanced;
+		if (score >= 60.0)
 			return Intermediate;
 		return Beginner;
 	}
