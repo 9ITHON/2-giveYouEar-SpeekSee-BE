@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.streaming.dto.request;
+package com._ithon.speeksee.domain.voicefeedback.practice.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.streaming.dto.request;
+package com._ithon.speeksee.domain.voicefeedback.practice.dto.request;
 
 import java.util.List;
 
@@ -22,9 +22,6 @@ public class PracticeSaveRequest {
 
 	@Schema(description = "정확도 (0.0 ~ 1.0)", example = "0.87")
 	private double accuracy;
-
-	@Schema(description = "오디오 파일 URL", example = "https://s3.amazonaws.com/bucket/audio1.mp3")
-	private String audioUrl;
 
 	@Schema(description = "단어별 연습 정보")
 	private List<PracticeWordDto> words;
