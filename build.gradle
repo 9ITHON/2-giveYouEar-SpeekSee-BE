@@ -77,6 +77,16 @@ dependencies {
     // Spring Boot 테스트 기능 (JUnit, MockMvc 등 포함)
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+
+    // Querydsl (JPA 쿼리 빌더)
+    implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
+    annotationProcessor "com.querydsl:querydsl-apt:5.1.0:jakarta"
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+}
+
+clean {
+    delete file('src/main/generated')
 }
 
 tasks.named('test') {

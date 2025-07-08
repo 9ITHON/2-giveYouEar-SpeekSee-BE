@@ -1,4 +1,4 @@
-package com._ithon.speeksee.domain.voicefeedback.streaming.controller;
+package com._ithon.speeksee.domain.voicefeedback.streaming.handler;
 
 import java.io.IOException;
 

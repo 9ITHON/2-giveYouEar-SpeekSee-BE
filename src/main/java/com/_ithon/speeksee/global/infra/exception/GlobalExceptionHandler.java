@@ -76,6 +76,14 @@ public class GlobalExceptionHandler {
 			.body(ApiRes.failure(e.getStatus(), e.getMessage(), e.getErrorCode()));
 	}
 
+	@ExceptionHandler(IllegalArgumentException.class)
+	public ResponseEntity<ApiRes<Void>> handleIllegalArgument(IllegalArgumentException e) {
+		log.warn("잘못된 요청 파라미터: {}", e.getMessage());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+			.body(ApiRes.failure(HttpStatus.BAD_REQUEST, e.getMessage(), ErrorCode.INVALID_ARGUMENT));
+	}
+
+
 	@ExceptionHandler(OAuth2AuthenticationException.class)
 	public ResponseEntity<ApiRes<Void>> handleOAuth2AuthException(OAuth2AuthenticationException e) {
 		return ResponseEntity.status(e.getStatus())
