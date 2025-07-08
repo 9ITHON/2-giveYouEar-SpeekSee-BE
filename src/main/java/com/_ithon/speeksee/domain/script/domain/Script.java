@@ -46,4 +46,7 @@ public class Script extends BaseTimeEntity {
 
 	@Enumerated(EnumType.STRING)
 	private DifficultyLevel difficultyLevel;
+
+	@Column(nullable = false)
+	private boolean isLevelTest = false; // 레벨 테스트용
 }
