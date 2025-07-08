@@ -1,5 +1,7 @@
 package com._ithon.speeksee.domain.script.dto.response;
 
+import java.time.LocalDateTime;
+
 import com._ithon.speeksee.domain.script.domain.DifficultyLevel;
 import com._ithon.speeksee.domain.script.domain.Script;
 import com._ithon.speeksee.domain.script.domain.ScriptCategory;
@@ -33,6 +35,12 @@ public class ScriptResponse {
 	@Schema(description = "스크립트 누적 연습 횟수", example = "7")
 	private int practiceCount;
 
+	@Schema(description = "스크립트 생성 시각", example = "2025-07-08T10:15:30")
+	private LocalDateTime createdAt;
+
+	@Schema(description = "스크립트 마지막 수정 시각", example = "2025-07-08T13:40:12")
+	private LocalDateTime updatedAt;
+
 	public static ScriptResponse from(Script script) {
 		return ScriptResponse.builder()
 			.id(script.getId())
@@ -42,6 +50,8 @@ public class ScriptResponse {
 			.difficulty(script.getDifficultyLevel())
 			.authorEmail(script.getAuthor().getEmail())
 			.practiceCount(script.getPracticeCount())
+			.createdAt(script.getCreatedAt())
+			.updatedAt(script.getUpdatedAt())
 			.build();
 	}
 }
