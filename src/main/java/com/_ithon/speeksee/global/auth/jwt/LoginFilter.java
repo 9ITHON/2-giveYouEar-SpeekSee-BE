@@ -5,7 +5,9 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -27,6 +29,7 @@ import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -76,6 +79,16 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 		// 리프레쉬 토큰 저장
 		RefreshToken refreshTokenEntity = buildRefreshTokenEntity(refreshToken, member);
 		refreshTokenRepository.save(refreshTokenEntity);
+
+		// refresh token을 HTTP-only 쿠키로 설정
+		ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+			.httpOnly(true)
+			.secure(false) // ⚠️ 배포 시 true
+			.sameSite("Lax")
+			.path("/")
+			.maxAge(Duration.ofDays(14))
+			.build();
+		response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
 		// 응답 DTO
 		MemberInfoResponseDto memberInfo = buildMemberInfoDto(member);
