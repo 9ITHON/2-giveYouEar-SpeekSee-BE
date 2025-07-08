@@ -31,6 +31,8 @@ public class ScriptRepositoryImpl implements ScriptRepositoryCustom {
 
 		// 정렬 조건 분기
 		switch (sortOption) {
+			case CREATED_ASC -> query.orderBy(script.createdAt.asc());
+			case CREATED_DESC -> query.orderBy(script.createdAt.desc());
 			case COUNT_DESC -> query.orderBy(script.practiceCount.desc());
 			case COUNT_ASC -> query.orderBy(script.practiceCount.asc());
 			case TITLE_ASC -> query.orderBy(script.title.asc());
