@@ -38,7 +38,7 @@ public class Script extends BaseTimeEntity {
 	private String content; // 스크립트 내용
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "member_id", nullable = false)
+	@JoinColumn(name = "member_id")
 	private Member author;
 
 	@Enumerated(EnumType.STRING)
@@ -48,5 +48,6 @@ public class Script extends BaseTimeEntity {
 	private DifficultyLevel difficultyLevel;
 
 	@Column(nullable = false)
+	@Builder.Default
 	private boolean isLevelTest = false; // 레벨 테스트용
 }
