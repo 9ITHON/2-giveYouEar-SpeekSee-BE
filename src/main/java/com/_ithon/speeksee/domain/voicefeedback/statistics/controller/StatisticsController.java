@@ -24,8 +24,10 @@ import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Statistics", description = "통계 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/statistics")
@@ -34,11 +36,18 @@ public class StatisticsController {
 	private final StatisticsService statisticsService;
 
 
+	@Operation(
+		summary = "기간별 연습 횟수 조회",
+		description = "memberId와 기간(weekly, half-year, yearly)을 기준으로 연습 횟수 추이를 조회합니다."
+	)
 	@GetMapping("/practice-count")
 	public ResponseEntity<ApiRes<?>> getPracticeCountTrend(
-		@RequestParam Long memberId,
+		@AuthenticationPrincipal CustomUserDetails userDetails,
+
+		@Parameter(description = "조회 기간 (weekly, half-year, yearly)", example = "weekly")
 		@RequestParam("period") String periodRaw
 	) {
+		Long memberId = userDetails.getMember().getId(); // 또는 userDetails.getId() 등
 		PeriodType period = PeriodType.fromString(periodRaw);
 		LocalDate baseDate = LocalDate.now();
 		LocalDate startDate = period.startDate(baseDate).toLocalDate();
@@ -59,9 +68,14 @@ public class StatisticsController {
 		};
 	}
 
+	@Operation(
+		summary = "전체 기간 연습 횟수 누적 조회",
+		description = "로그인한 사용자의 전체 기간 누적 연습 횟수를 조회합니다."
+	)
 	@GetMapping("/practice-counts/all")
 	public ResponseEntity<ApiRes<List<PracticeCountResponse>>> getAllPeriodCounts(
-		@AuthenticationPrincipal CustomUserDetails userDetails) {
+		@AuthenticationPrincipal CustomUserDetails userDetails
+	) {
 		Long memberId = userDetails.getMember().getId(); // 또는 userDetails.getId() 등
 		List<PracticeCountResponse> response = statisticsService.getAllPeriodCumulativeCounts(memberId);
 		return ResponseEntity.ok(ApiRes.success(response));
@@ -81,14 +95,27 @@ public class StatisticsController {
 		return ApiRes.success(result);
 	}
 
+	@Operation(
+		summary = "스크립트별 누적 최대 정확도 추이 조회",
+		description = "스크립트 ID를 기준으로 날짜별 최대 정확도의 누적 변화 추이를 조회합니다."
+	)
 	@GetMapping("/scripts/{scriptId}/max-accuracy-trend")
-	public ResponseEntity<ApiRes<List<MaxAccuracyTrendDto>>> getMaxAccuracyTrend(@PathVariable Long scriptId) {
+	public ResponseEntity<ApiRes<List<MaxAccuracyTrendDto>>> getMaxAccuracyTrend(
+		@Parameter(description = "대본 ID", example = "1")
+		@PathVariable Long scriptId
+	) {
 		List<MaxAccuracyTrendDto> result = statisticsService.getMaxAccuracyTrend(scriptId);
 		return ResponseEntity.ok(ApiRes.success(result, "날짜별 누적 최대 정확도 조회 성공"));
 	}
 
+	@Operation(
+		summary = "전체 누적 성취도 점수 조회",
+		description = "로그인한 사용자의 전체 기간 누적 성취도 점수 추이를 조회합니다."
+	)
 	@GetMapping("/me/cumulative-score")
-	public ResponseEntity<ApiRes<List<CumulativeScoreDto>>> getAllCumulativeScore(@AuthenticationPrincipal CustomUserDetails userDetails) {
+	public ResponseEntity<ApiRes<List<CumulativeScoreDto>>> getAllCumulativeScore(
+		@AuthenticationPrincipal CustomUserDetails userDetails
+	) {
 		Long memberId = userDetails.getMember().getId();
 		List<CumulativeScoreDto> result = statisticsService.getAllPeriodCumulativeScores(memberId);
 		return ResponseEntity.ok(ApiRes.success(result));
