@@ -5,9 +5,12 @@ import java.util.List;
 import org.springframework.stereotype.Repository;
 
 import com._ithon.speeksee.domain.member.entity.Member;
+import com._ithon.speeksee.domain.script.domain.DifficultyLevel;
 import com._ithon.speeksee.domain.script.domain.QScript;
 import com._ithon.speeksee.domain.script.domain.Script;
 import com._ithon.speeksee.domain.script.domain.ScriptSortOption;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -32,8 +35,22 @@ public class ScriptRepositoryImpl implements ScriptRepositoryCustom {
 			case COUNT_ASC -> query.orderBy(script.practiceCount.asc());
 			case TITLE_ASC -> query.orderBy(script.title.asc());
 			case TITLE_DESC -> query.orderBy(script.title.desc());
-			case DIFFICULTY_ASC -> query.orderBy(script.difficultyLevel.asc());
-			case DIFFICULTY_DESC -> query.orderBy(script.difficultyLevel.desc());
+			case DIFFICULTY_ASC -> {
+				NumberExpression<Integer> difficultyOrder = new CaseBuilder()
+					.when(script.difficultyLevel.eq(DifficultyLevel.EASY)).then(1)
+					.when(script.difficultyLevel.eq(DifficultyLevel.MEDIUM)).then(2)
+					.when(script.difficultyLevel.eq(DifficultyLevel.HARD)).then(3)
+					.otherwise(99);
+				query.orderBy(difficultyOrder.asc());
+			}
+			case DIFFICULTY_DESC -> {
+				NumberExpression<Integer> difficultyOrder = new CaseBuilder()
+					.when(script.difficultyLevel.eq(DifficultyLevel.EASY)).then(1)
+					.when(script.difficultyLevel.eq(DifficultyLevel.MEDIUM)).then(2)
+					.when(script.difficultyLevel.eq(DifficultyLevel.HARD)).then(3)
+					.otherwise(99);
+				query.orderBy(difficultyOrder.desc());
+			}
 			case UPDATED_ASC -> query.orderBy(script.updatedAt.asc());
 			case UPDATED_DESC -> query.orderBy(script.updatedAt.desc());
 			default -> query.orderBy(script.createdAt.desc()); // fallback
