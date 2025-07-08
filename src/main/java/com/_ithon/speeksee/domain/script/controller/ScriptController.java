@@ -1,7 +1,6 @@
 package com._ithon.speeksee.domain.script.controller;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -10,13 +9,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.domain.script.domain.Script;
+import com._ithon.speeksee.domain.script.domain.ScriptSortOption;
 import com._ithon.speeksee.domain.script.dto.response.ScriptResponse;
 import com._ithon.speeksee.domain.script.dto.resquest.ScriptGenerateRequest;
 import com._ithon.speeksee.domain.script.service.ScriptService;
-import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.global.auth.model.CustomUserDetails;
 import com._ithon.speeksee.global.infra.exception.response.ApiRes;
 
@@ -76,11 +77,14 @@ public class ScriptController {
 		description = "로그인한 사용자의 대본 목록을 조회합니다."
 	)
 	@GetMapping("/my")
-	public ApiRes<List<ScriptResponse>> getMyScripts(@AuthenticationPrincipal CustomUserDetails userDetails) {
-		List<Script> scripts = scriptService.getScriptsByMemberId(userDetails.getMember().getId());
+	public ApiRes<List<ScriptResponse>> getMyScripts(
+		@AuthenticationPrincipal CustomUserDetails userDetails,
+		@RequestParam(defaultValue = "CREATED_DESC") ScriptSortOption sort
+	) {
+		List<Script> scripts = scriptService.getScriptsByMemberId(userDetails.getMember().getId(), sort);
 		List<ScriptResponse> response = scripts.stream()
 			.map(ScriptResponse::from)
-			.collect(Collectors.toList());
+			.toList();
 		return ApiRes.success(response);
 	}
 
