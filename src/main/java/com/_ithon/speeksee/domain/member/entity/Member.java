@@ -52,8 +52,8 @@ public class Member extends BaseTimeEntity {
 	@Column
 	private String providerId; // 각 소셜 서비스에서 제공하는 고유 ID
 
-	@Builder.Default
-	private String currentLevel = "초급";
+	@Enumerated(EnumType.STRING)
+	private Level currentLevel = Level.Beginner;
 
 	@Builder.Default
 	private Integer totalExp = 0;
