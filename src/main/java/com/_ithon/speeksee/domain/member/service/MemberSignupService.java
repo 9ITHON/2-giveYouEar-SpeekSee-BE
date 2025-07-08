@@ -8,6 +8,7 @@ import com._ithon.speeksee.domain.member.dto.request.SignUpRequestDto;
 import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.global.infra.exception.auth.SpeekseeAuthException;
+import com._ithon.speeksee.global.infra.exception.entityException.DuplicateResourceException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,11 +20,11 @@ public class MemberSignupService {
 
 	public Member signUp(SignUpRequestDto signUpRequestDto) {
 		if (memberRepository.existsByEmail(signUpRequestDto.getEmail())) {
-			throw new SpeekseeAuthException(HttpStatus.CONFLICT, "이메일이 이미 존재합니다");
+			throw new DuplicateResourceException("이메일", signUpRequestDto.getEmail());
 		}
 
 		if (memberRepository.existsByNickname(signUpRequestDto.getNickname())) {
-			throw new SpeekseeAuthException(HttpStatus.CONFLICT, "닉네임이 이미 사용 중입니다");
+			throw new DuplicateResourceException("닉네임", signUpRequestDto.getNickname());
 		}
 
 		String encodedPassword = passwordEncoder.encode(signUpRequestDto.getPassword());
