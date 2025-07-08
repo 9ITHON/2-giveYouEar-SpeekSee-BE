@@ -11,4 +11,6 @@ public interface ScriptRepository extends JpaRepository<Script, Long> {
 
 	@Query("SELECT s FROM Script s WHERE s.isLevelTest = true")
 	List<Script> findAllLevelTestScripts();
+
+	boolean existsByIsLevelTest(boolean isLevelTest);
 }
