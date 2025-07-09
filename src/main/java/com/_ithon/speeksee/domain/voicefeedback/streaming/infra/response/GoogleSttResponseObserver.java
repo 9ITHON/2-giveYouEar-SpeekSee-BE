@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
+import com._ithon.speeksee.domain.member.service.LevelTestProcessor;
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.TranscriptResult;
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.WordInfoDto;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender.WebSocketErrorSender;
@@ -25,7 +26,8 @@ import com.google.cloud.speech.v1.WordInfo;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class GoogleSttResponseObserver implements ResponseObserver<com.google.cloud.speech.v1.StreamingRecognizeResponse> {
+public class GoogleSttResponseObserver
+	implements ResponseObserver<com.google.cloud.speech.v1.StreamingRecognizeResponse> {
 
 	private final WebSocketSession session;
 	private final SttSessionContext context;
@@ -33,6 +35,7 @@ public class GoogleSttResponseObserver implements ResponseObserver<com.google.cl
 	private final ObjectMapper objectMapper;
 	private final List<String> scriptWords;
 	private final WebSocketErrorSender errorSender;
+	private final LevelTestProcessor levelTestProcessor;
 
 	public GoogleSttResponseObserver(
 		WebSocketSession session,
@@ -40,7 +43,8 @@ public class GoogleSttResponseObserver implements ResponseObserver<com.google.cl
 		PracticeSaveService practiceSaveService,
 		ObjectMapper objectMapper,
 		List<String> scriptWords,
-		WebSocketErrorSender errorSender
+		WebSocketErrorSender errorSender,
+		LevelTestProcessor levelTestProcessor
 	) {
 		this.session = session;
 		this.context = context;
@@ -48,6 +52,7 @@ public class GoogleSttResponseObserver implements ResponseObserver<com.google.cl
 		this.objectMapper = objectMapper;
 		this.scriptWords = scriptWords;
 		this.errorSender = errorSender;
+		this.levelTestProcessor = levelTestProcessor;
 	}
 
 	@Override
@@ -59,7 +64,8 @@ public class GoogleSttResponseObserver implements ResponseObserver<com.google.cl
 	@Override
 	public void onResponse(StreamingRecognizeResponse response) {
 		for (StreamingRecognitionResult result : response.getResultsList()) {
-			if (result.getAlternativesCount() == 0) continue;
+			if (result.getAlternativesCount() == 0)
+				continue;
 
 			SpeechRecognitionAlternative alt = result.getAlternatives(0);
 			String transcript = alt.getTranscript();
@@ -85,12 +91,18 @@ public class GoogleSttResponseObserver implements ResponseObserver<com.google.cl
 
 			List<WordInfoDto> wordInfos = LcsAligner.align(spokenWords, scriptWords, startTimes, endTimes);
 
-			int correct = (int) wordInfos.stream().filter(WordInfoDto::isCorrect).count();
+			int correct = (int)wordInfos.stream().filter(WordInfoDto::isCorrect).count();
 			int total = wordInfos.size();
-			double accuracy = total == 0 ? 0.0 : (double) correct / total;
+			double accuracy = total == 0 ? 0.0 : (double)correct / total;
 
 			if (isFinal && FinalResponseValidator.isMeaningfulFinalResponse(wordInfos, transcript, confidence)) {
-				practiceSaveService.save(context.memberId, context.scriptId, transcript, accuracy, wordInfos);
+
+				if ("level_test".equals(context.mode)) {
+					context.levelTestWordInfos.addAll(wordInfos);
+					log.info("[{wordInfos}] 레벨 테스트 응답 저장 생략 - 누적만 수행", wordInfos);
+				} else {
+					practiceSaveService.save(context.memberId, context.scriptId, transcript, accuracy, wordInfos);
+				}
 			}
 
 			try {
@@ -119,6 +131,11 @@ public class GoogleSttResponseObserver implements ResponseObserver<com.google.cl
 
 	@Override
 	public void onComplete() {
+		if ("level_test".equals(context.mode) && !context.levelTestProcessed) {
+			context.levelTestProcessed = true;
+			levelTestProcessor.process(context.memberId, context.levelTestWordInfos);
+			log.info("!!레벨 테스트!!");
+		}
 		log.info("🎙 STT 스트리밍 완료: {}", session.getId());
 	}
 
