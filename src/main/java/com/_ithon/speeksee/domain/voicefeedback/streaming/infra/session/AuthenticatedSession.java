@@ -9,4 +9,5 @@ public class AuthenticatedSession {
 	private Long memberId;
 	private String email;
 	private Long scriptId;
+	private String mode;
 }

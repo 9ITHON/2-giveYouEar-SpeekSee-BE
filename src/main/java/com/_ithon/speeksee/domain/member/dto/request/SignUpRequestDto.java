@@ -2,6 +2,7 @@ package com._ithon.speeksee.domain.member.dto.request;
 
 import java.time.LocalDate;
 
+import com._ithon.speeksee.domain.member.entity.Level;
 import com._ithon.speeksee.domain.member.entity.Member;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -39,7 +40,7 @@ public class SignUpRequestDto {
 			.passwordHash(encodedPassword)
 			.nickname(this.nickname)
 			.birthday(this.birthday)
-			.currentLevel("초급")
+			.currentLevel(Level.Beginner)
 			.totalExp(0)
 			.consecutiveDays(0)
 			.infoCompleted(true)

@@ -1,6 +1,7 @@
 package com._ithon.speeksee.domain.script.service;
 
 import java.util.List;
+import java.util.Random;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,8 @@ import com._ithon.speeksee.domain.script.domain.ScriptCategory;
 import com._ithon.speeksee.domain.script.domain.ScriptSortOption;
 import com._ithon.speeksee.domain.script.port.LlmClient;
 import com._ithon.speeksee.domain.script.repository.ScriptRepository;
+import com._ithon.speeksee.domain.member.entity.Member;
+import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.global.infra.exception.entityException.MemberNotFoundException;
 import com._ithon.speeksee.global.infra.exception.entityException.ScriptNotFoundException;
 
@@ -153,4 +156,9 @@ public class ScriptService {
 		scriptRepository.delete(script);
 	}
 
+	@Transactional
+	public Script getLevelTestScript() {
+		List<Script> scripts = scriptRepository.findAllLevelTestScripts();
+		return scripts.get(new Random().nextInt(scripts.size()));
+	}
 }

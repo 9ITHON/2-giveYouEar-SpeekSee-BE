@@ -128,4 +128,11 @@ public class ScriptController {
 		return ApiRes.success(null, "대본이 성공적으로 삭제되었습니다.");
 	}
 
+	@Operation(summary = "레벨 테스트 스크립트 조회", description = "레벨 테스트용 정적 스크립트를 무작위로 반환합니다.")
+	@GetMapping("/level-test")
+	public ApiRes<ScriptResponse> getLevelTestScript() {
+		Script script = scriptService.getLevelTestScript();
+		return ApiRes.success(ScriptResponse.from(script));
+	}
+
 }

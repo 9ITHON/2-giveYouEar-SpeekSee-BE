@@ -2,6 +2,9 @@ package com._ithon.speeksee.domain.script.dto.response;
 
 import java.time.LocalDateTime;
 
+import java.util.Optional;
+
+import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.domain.script.domain.DifficultyLevel;
 import com._ithon.speeksee.domain.script.domain.Script;
 import com._ithon.speeksee.domain.script.domain.ScriptCategory;
@@ -48,7 +51,11 @@ public class ScriptResponse {
 			.content(script.getContent())
 			.category(script.getCategory())
 			.difficulty(script.getDifficultyLevel())
-			.authorEmail(script.getAuthor().getEmail())
+			.authorEmail(
+				Optional.ofNullable(script.getAuthor())
+					.map(Member::getEmail)
+					.orElse("SYSTEM")
+			)
 			.practiceCount(script.getPracticeCount())
 			.createdAt(script.getCreatedAt())
 			.updatedAt(script.getUpdatedAt())

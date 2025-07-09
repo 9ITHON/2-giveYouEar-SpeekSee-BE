@@ -12,8 +12,10 @@ import org.springframework.web.socket.WebSocketSession;
 import com._ithon.speeksee.domain.script.repository.ScriptRepository;
 import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.response.GoogleSttResponseObserver;
+import com._ithon.speeksee.domain.member.service.LevelTestProcessor;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender.StreamingRequestSender;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender.WebSocketErrorSender;
+import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.AuthenticatedSession;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionManager;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionContext;
 import com._ithon.speeksee.domain.voicefeedback.streaming.port.StreamingSttClient;
@@ -55,6 +57,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	private final SttSessionManager sessionManager;
 	private final StreamingRequestSender requestSender;
 	private final WebSocketErrorSender errorSender;
+	private final LevelTestProcessor levelTestProcessor;
 
 	/**
 	 * Google Cloud Speech-to-Text 클라이언트를 초기화합니다.
@@ -71,7 +74,8 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 		ScriptRepository scriptRepository,
 		SttSessionManager sessionManager,
 		StreamingRequestSender requestSender,
-		WebSocketErrorSender errorSender
+		WebSocketErrorSender errorSender,
+		LevelTestProcessor levelTestProcessor
 	) throws IOException {
 		GoogleCredentials credentials = GoogleCredentials
 			.fromStream(new FileInputStream(credentialsPath))
@@ -88,6 +92,7 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 		this.sessionManager = sessionManager;
 		this.requestSender = requestSender;
 		this.errorSender = errorSender;
+		this.levelTestProcessor = levelTestProcessor;
 	}
 
 	/**
@@ -101,12 +106,15 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 	public void start(WebSocketSession session) {
 		try {
 			SttSessionContext context = sessionManager.startSession(session);
+			AuthenticatedSession auth = (AuthenticatedSession)session.getAttributes().get("auth");
+			if (auth != null) {
+				context.mode = auth.getMode(); // level_test 또는 normal
+			}
 
 			if (context.memberId == null || context.scriptId == null) {
 				errorSender.sendErrorAndClose(session, "AUTH_001", "인증 정보가 없습니다. AUTH 메시지를 먼저 보내야 합니다.");
 				return;
 			}
-
 
 			memberRepository.findById(context.memberId).orElseThrow(() -> {
 				log.warn("[{}] 존재하지 않는 memberId: {}", session.getId(), context.memberId);
@@ -126,7 +134,8 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 
 			// 응답 옵저버 생성
 			ResponseObserver<StreamingRecognizeResponse> responseObserver =
-				new GoogleSttResponseObserver(session, context, practiceSaveService, objectMapper, scriptWords, errorSender);
+				new GoogleSttResponseObserver(session, context, practiceSaveService, objectMapper, scriptWords,
+					errorSender, levelTestProcessor);
 
 			// 클라이언트 스트림 생성
 			ClientStream<StreamingRecognizeRequest> clientStream =
@@ -152,7 +161,6 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 			log.error("STT 스트리밍 세션 생성 실패: {}", session.getId(), e);
 		}
 	}
-
 
 	/**
 	 * WebSocket 세션에서 오디오 데이터를 수신할 때 호출됩니다.

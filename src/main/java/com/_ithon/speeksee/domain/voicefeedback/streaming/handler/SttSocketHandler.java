@@ -32,7 +32,6 @@ public class SttSocketHandler extends BinaryWebSocketHandler {
 	private final JwtTokenProvider jwtTokenProvider; // JWT 토큰 검증을 위한 컴포넌트
 	private final ObjectMapper objectMapper; // JSON 파싱을 위한 ObjectMapper
 
-
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) {
 		log.info("WebSocket 연결 시작: {}", session.getId());
@@ -40,7 +39,7 @@ public class SttSocketHandler extends BinaryWebSocketHandler {
 
 	@Override
 	protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) {
-		AuthenticatedSession auth = (AuthenticatedSession) session.getAttributes().get("auth");
+		AuthenticatedSession auth = (AuthenticatedSession)session.getAttributes().get("auth");
 		if (auth == null) {
 			log.warn("인증되지 않은 세션의 바이너리 메시지: {}", session.getId());
 			try {
@@ -82,11 +81,12 @@ public class SttSocketHandler extends BinaryWebSocketHandler {
 			String token = json.get("token").asText().replace("Bearer ", "").trim();
 			Long memberId = json.get("memberId").asLong();
 			Long scriptId = json.get("scriptId").asLong();
+			String mode = json.has("mode") ? json.get("mode").asText() : "normal";
 
 			jwtTokenProvider.validateToken(token);
 			String email = jwtTokenProvider.getEmailFromToken(token);
 
-			AuthenticatedSession auth = new AuthenticatedSession(memberId, email, scriptId);
+			AuthenticatedSession auth = new AuthenticatedSession(memberId, email, scriptId, mode);
 			session.getAttributes().put("auth", auth);
 
 			log.info("✅ WebSocket 인증 성공: sessionId={}, memberId={}, email={}", session.getId(), memberId, email);
