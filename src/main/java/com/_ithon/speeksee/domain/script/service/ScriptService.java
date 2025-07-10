@@ -12,10 +12,10 @@ import com._ithon.speeksee.domain.script.domain.DifficultyLevel;
 import com._ithon.speeksee.domain.script.domain.Script;
 import com._ithon.speeksee.domain.script.domain.ScriptCategory;
 import com._ithon.speeksee.domain.script.domain.ScriptSortOption;
+import com._ithon.speeksee.domain.script.dto.response.ScriptsResponse;
+import com._ithon.speeksee.domain.script.dto.resquest.ScriptBatchSaveReq;
 import com._ithon.speeksee.domain.script.port.LlmClient;
 import com._ithon.speeksee.domain.script.repository.ScriptRepository;
-import com._ithon.speeksee.domain.member.entity.Member;
-import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.global.infra.exception.entityException.MemberNotFoundException;
 import com._ithon.speeksee.global.infra.exception.entityException.ScriptNotFoundException;
 
@@ -66,6 +66,29 @@ public class ScriptService {
 
 		return scriptRepository.save(script);
 	}
+
+	@Transactional
+	public List<ScriptsResponse> saveAll(List<ScriptBatchSaveReq> requests, Member author) {
+		List<Script> scripts = requests.stream()
+			.map(req -> Script.builder()
+				.title(req.title())
+				.content(req.content())
+				.category(req.category())
+				.difficultyLevel(req.difficultyLevel())
+				.isLevelTest(req.isLevelTest())
+				.practiceCount(0)
+				.author(author)
+				.build()
+			).toList();
+
+		List<Script> saved = scriptRepository.saveAll(scripts);
+		return saved.stream()
+			.map(ScriptsResponse::from)
+			.toList();
+	}
+
+
+
 
 	/**
 	 * LLM에서 받은 대본 원문을 파싱하여 제목과 내용을 추출합니다.
