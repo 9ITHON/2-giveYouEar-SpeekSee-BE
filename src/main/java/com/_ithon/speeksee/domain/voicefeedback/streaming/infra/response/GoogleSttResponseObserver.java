@@ -219,12 +219,12 @@ public class GoogleSttResponseObserver
 					.build();
 
 				String json = objectMapper.writeValueAsString(dto);
-				log.info("[{}] ✅ 최종 응답 DTO: {}", session.getId(), json);
+				log.info("[{}] 최종 응답 DTO: {}", session.getId(), json);
 				session.sendMessage(new TextMessage(json));
-				log.info("[{}] ✅ 최종 응답 전송 완료", session.getId());
+				log.info("[{}] 최종 응답 전송 완료", session.getId());
 
 			} catch (IOException e) {
-				log.error("[{}] ❌ 응답 전송 실패", session.getId(), e);
+				log.error("[{}] 응답 전송 실패", session.getId(), e);
 			}
 		} else {
 			log.warn("[{}] WebSocket 세션이 이미 닫혀 응답 전송 생략", session.getId());
