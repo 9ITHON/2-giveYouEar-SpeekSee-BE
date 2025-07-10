@@ -7,8 +7,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
-import com._ithon.speeksee.domain.voicefeedback.streaming.infra.response.GoogleSttResponseObserver;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Component
@@ -85,12 +83,5 @@ public class SttSessionManager {
 		}
 	}
 
-	public GoogleSttResponseObserver getObserver(String sessionId) {
-		SttSessionContext context = sessionMap.get(sessionId);
-		if (context != null) {
-			return context.getObserver(); // 또는 context.observer
-		}
-		return null;
-	}
 
 }
