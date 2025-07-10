@@ -9,17 +9,17 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import com._ithon.speeksee.domain.script.repository.ScriptRepository;
 import com._ithon.speeksee.domain.member.repository.MemberRepository;
-import com._ithon.speeksee.domain.voicefeedback.streaming.infra.response.GoogleSttResponseObserver;
 import com._ithon.speeksee.domain.member.service.LevelTestProcessor;
+import com._ithon.speeksee.domain.script.repository.ScriptRepository;
+import com._ithon.speeksee.domain.voicefeedback.practice.service.PracticeSaveService;
+import com._ithon.speeksee.domain.voicefeedback.streaming.infra.response.GoogleSttResponseObserver;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender.StreamingRequestSender;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender.WebSocketErrorSender;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.AuthenticatedSession;
-import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionManager;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionContext;
+import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionManager;
 import com._ithon.speeksee.domain.voicefeedback.streaming.port.StreamingSttClient;
-import com._ithon.speeksee.domain.voicefeedback.practice.service.PracticeSaveService;
 import com._ithon.speeksee.global.infra.exception.entityException.MemberNotFoundException;
 import com._ithon.speeksee.global.infra.exception.entityException.ScriptNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -108,7 +108,12 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 			SttSessionContext context = sessionManager.startSession(session);
 			AuthenticatedSession auth = (AuthenticatedSession)session.getAttributes().get("auth");
 			if (auth != null) {
-				context.mode = auth.getMode(); // level_test 또는 normal
+				try {
+					context.setMode(auth.getMode()); // ex: "level_test" → "LEVEL_TEST"
+				} catch (IllegalArgumentException e) {
+					errorSender.sendErrorAndClose(session, "MODE_INVALID", "유효하지 않은 연습 모드입니다.");
+					return;
+				}
 			}
 
 			if (context.memberId == null || context.scriptId == null) {
@@ -136,6 +141,8 @@ public class GoogleStreamingSttClient implements StreamingSttClient {
 			ResponseObserver<StreamingRecognizeResponse> responseObserver =
 				new GoogleSttResponseObserver(session, context, practiceSaveService, objectMapper, scriptWords,
 					errorSender, levelTestProcessor);
+
+			context.setObserver((GoogleSttResponseObserver) responseObserver);
 
 			// 클라이언트 스트림 생성
 			ClientStream<StreamingRecognizeRequest> clientStream =

@@ -8,11 +8,12 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import com._ithon.speeksee.domain.member.service.LevelTestProcessor;
+import com._ithon.speeksee.domain.voicefeedback.practice.entity.PracticeMode;
+import com._ithon.speeksee.domain.voicefeedback.practice.service.PracticeSaveService;
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.TranscriptResult;
 import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.WordInfoDto;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.sender.WebSocketErrorSender;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.SttSessionContext;
-import com._ithon.speeksee.domain.voicefeedback.practice.service.PracticeSaveService;
 import com._ithon.speeksee.domain.voicefeedback.streaming.util.FinalResponseValidator;
 import com._ithon.speeksee.domain.voicefeedback.streaming.util.LcsAligner;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,6 +37,11 @@ public class GoogleSttResponseObserver
 	private final List<String> scriptWords;
 	private final WebSocketErrorSender errorSender;
 	private final LevelTestProcessor levelTestProcessor;
+	private StreamController controller;
+
+	private final List<WordInfoDto> accumulatedWordInfos = new ArrayList<>();
+	private final StringBuilder accumulatedTranscript = new StringBuilder();
+
 
 	public GoogleSttResponseObserver(
 		WebSocketSession session,
@@ -58,6 +64,7 @@ public class GoogleSttResponseObserver
 	@Override
 	public void onStart(StreamController controller) {
 		context.controller = controller;
+		this.controller = controller;
 		log.info("🎙 STT 스트리밍 시작: {}", session.getId());
 	}
 
@@ -96,12 +103,13 @@ public class GoogleSttResponseObserver
 			double accuracy = total == 0 ? 0.0 : (double)correct / total;
 
 			if (isFinal && FinalResponseValidator.isMeaningfulFinalResponse(wordInfos, transcript, confidence)) {
-
-				if ("level_test".equals(context.mode)) {
+				if (context.getMode() == PracticeMode.LEVEL_TEST) {
 					context.levelTestWordInfos.addAll(wordInfos);
-					log.info("[{wordInfos}] 레벨 테스트 응답 저장 생략 - 누적만 수행", wordInfos);
+					log.info("[레벨테스트] 응답 누적: {}", transcript);
 				} else {
-					practiceSaveService.save(context.memberId, context.scriptId, transcript, accuracy, wordInfos);
+					accumulatedTranscript.append(transcript).append(" ");
+					accumulatedWordInfos.addAll(wordInfos);
+					log.info("[일반연습] 문장 누적 중: {}", transcript);
 				}
 			}
 
@@ -115,7 +123,10 @@ public class GoogleSttResponseObserver
 				if (isFinal) {
 					builder.correctCount(correct)
 						.totalCount(total)
-						.accuracy(accuracy);
+						.accuracy(accuracy)
+						.type("INTERIM_FINAL");  // 또는 "ON_RESPONSE_FINAL"
+				} else {
+					builder.type("INTERIM"); // 중간 응답도 명시
 				}
 
 				TranscriptResult dto = builder.build();
@@ -131,17 +142,69 @@ public class GoogleSttResponseObserver
 
 	@Override
 	public void onComplete() {
-		if ("level_test".equals(context.mode) && !context.levelTestProcessed) {
+		if (context.getMode() == PracticeMode.NORMAL) {
+			flushAccumulatedResults();
+		}
+
+		if (context.getMode() == PracticeMode.LEVEL_TEST && !context.levelTestProcessed) {
 			context.levelTestProcessed = true;
 			levelTestProcessor.process(context.memberId, context.levelTestWordInfos);
-			log.info("!!레벨 테스트!!");
+			log.info("레벨 테스트 완료 처리됨");
 		}
-		log.info("🎙 STT 스트리밍 완료: {}", session.getId());
+		log.info("🎙 STT 스트리밍 종료: {}", session.getId());
 	}
 
 	@Override
 	public void onError(Throwable t) {
 		log.error("STT 스트리밍 오류: {}", session.getId(), t);
 		errorSender.sendErrorAndClose(session, "STT_ERROR", "STT 처리 중 오류가 발생했습니다.");
+	}
+
+	public void flushAccumulatedResults() {
+		if (accumulatedWordInfos.isEmpty()) return;
+
+		int correct = (int) accumulatedWordInfos.stream().filter(WordInfoDto::isCorrect).count();
+		int total = accumulatedWordInfos.size();
+		double accuracy = total == 0 ? 0.0 : (double) correct / total;
+		String fullTranscript = accumulatedTranscript.toString().trim();
+
+		// [1] DB 저장
+		practiceSaveService.save(
+			context.getMemberId(),
+			context.getScriptId(),
+			fullTranscript,
+			accuracy,
+			accumulatedWordInfos
+		);
+
+		// [2] 최종 응답 전송
+		if (session != null && session.isOpen()) {
+			try {
+				TranscriptResult dto = TranscriptResult.builder()
+					.transcript(fullTranscript)
+					.confidence(1.0f)
+					.isFinal(true)
+					.words(new ArrayList<>(accumulatedWordInfos))
+					.correctCount(correct)
+					.totalCount(total)
+					.accuracy(accuracy)
+					.type("FINAL_FLUSH")
+					.build();
+
+				log.info("[{}] 최종 응답 DTO: {}", session.getId(), objectMapper.writeValueAsString(dto));
+				session.sendMessage(new TextMessage(objectMapper.writeValueAsString(dto)));
+				log.info("[{}] 최종 응답 전송 완료", session.getId());
+
+			} catch (IOException e) {
+				log.error("[{}] 응답 전송 실패", session.getId(), e);
+			}
+		} else {
+			log.warn("[{}] WebSocket 세션이 이미 닫혀 응답 전송 생략", session.getId());
+		}
+
+
+		// [3] 상태 초기화
+		accumulatedTranscript.setLength(0);
+		accumulatedWordInfos.clear();
 	}
 }
