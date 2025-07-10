@@ -6,9 +6,12 @@ import java.util.Random;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import com._ithon.speeksee.domain.member.entity.Member;
+import com._ithon.speeksee.domain.member.repository.MemberRepository;
 import com._ithon.speeksee.domain.script.domain.DifficultyLevel;
 import com._ithon.speeksee.domain.script.domain.Script;
 import com._ithon.speeksee.domain.script.domain.ScriptCategory;
+import com._ithon.speeksee.domain.script.domain.ScriptSortOption;
 import com._ithon.speeksee.domain.script.port.LlmClient;
 import com._ithon.speeksee.domain.script.repository.ScriptRepository;
 import com._ithon.speeksee.domain.member.entity.Member;
@@ -42,24 +45,42 @@ public class ScriptService {
 		String prompt = buildPrompt(category, difficultyLevel);
 
 		int maxTokens = switch (difficultyLevel) {
-			case EASY -> 300;
-			case MEDIUM -> 500;
-			case HARD -> 700;
+			case EASY -> 400;
+			case MEDIUM -> 600;
+			case HARD -> 850;
 		};
 
-		String content = llmClient.chat(prompt, maxTokens);
+		String rawResponse = llmClient.chat(prompt, maxTokens);
+		ScriptGenerationResult parsed = parseTitleAndContent(rawResponse);
 
 		Script script = Script.builder()
-			.title(category.getDescription() + " 대본")
-			.content(content)
+			.title(parsed.title())
+			.content(parsed.content())
 			.category(category)
 			.difficultyLevel(difficultyLevel)
+			.author(member)
+			.practiceCount(0)
 			.build();
 
 		member.addScript(script); // 이제 영속 상태의 member라 문제 없음
 
 		return scriptRepository.save(script);
 	}
+
+	/**
+	 * LLM에서 받은 대본 원문을 파싱하여 제목과 내용을 추출합니다.
+	 *
+	 * @param raw LLM에서 받은 원문
+	 * @return 제목과 내용이 포함된 ScriptGenerationResult 객체
+	 */
+	private ScriptGenerationResult parseTitleAndContent(String raw) {
+		String[] parts = raw.split("\\[내용\\]", 2);
+		String title = parts[0].replace("[제목]", "").trim();
+		String content = parts.length > 1 ? parts[1].trim() : "";
+		return new ScriptGenerationResult(title, content);
+	}
+
+	private record ScriptGenerationResult(String title, String content) {}
 
 	/**
 	 * 주어진 카테고리와 난이도에 맞는 대본을 생성하기 위한 프롬프트를 빌드합니다.
@@ -70,33 +91,45 @@ public class ScriptService {
 	 */
 	private String buildPrompt(ScriptCategory category, DifficultyLevel difficultyLevel) {
 		return String.format("""
-				한국어 발음 연습용 스크립트를 작성해 주세요.
-				
-				- 사용자가 그대로 읽을 수 있도록 구성해 주세요.
-				- 문장은 자연스럽고 발음 피드백 학습에 적합해야 합니다.
-				- 대본은 단락 구분 없이 하나의 글로 출력해 주세요. 설명이나 부연 없이 순수한 대본만 제공해 주세요.
-				- 주제: %s
-				
-				난이도 수준은 아래 기준에 맞춰주세요.
-				- 쉬움: 초등학생도 이해할 수 있는 쉬운 어휘와 짧은 문장
-				- 중간: 일상적인 대화 수준, 자연스럽고 약간의 복문 포함
-				- 어려움: 뉴스나 발표체에 가까운 긴 문장과 복잡한 어휘
-				
-				난이도 수준: %s
-				문장 수: 5문장 내외
-				
-				이제 실제 스크립트를 작성해 주세요.
-				""",
+        한국어 발음 연습용 스크립트를 작성해 주세요.
+
+        - 사용자가 그대로 읽을 수 있도록 구성해 주세요.
+        - 문장은 자연스럽고 발음 피드백 학습에 적합해야 합니다.
+        - 대본은 단락 구분 없이 하나의 글로 출력해 주세요. 설명이나 부연 없이 순수한 대본만 제공해 주세요.
+
+        난이도 수준은 아래 기준에 맞춰주세요.
+        - 쉬움: 초등학생도 이해할 수 있는 쉬운 어휘와 짧은 문장
+        - 중간: 일상적인 대화 수준, 자연스럽고 약간의 복문 포함
+        - 어려움: 뉴스나 발표체에 가까운 긴 문장과 복잡한 어휘
+        
+		- [제목]과 [내용] 섹션을 반드시 포함해 주세요.
+		- 제목은 대본을 대표하는 한 줄 요약입니다. (5~15자 정도)
+		- [내용]에는 설명 없이 사용자가 읽을 문장만 작성해 주세요.
+
+        예시 형식:
+        [제목]
+		기상청이 전한 오늘의 날씨
+
+        [내용]
+        오늘은 전국적으로 맑은 날씨가 예상되며, 기온은...
+		
+		주제: %s
+        난이도 수준: %s
+        문장 수: 5문장 내외
+
+        이제 실제 스크립트를 작성해 주세요.
+        """,
 			difficultyLevel.getDescription(),
 			category.getDescription()
 		);
 	}
 
 	@Transactional
-	public List<Script> getScriptsByMemberId(Long memberId) {
+	public List<Script> getScriptsByMemberId(Long memberId, ScriptSortOption sortOption) {
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(MemberNotFoundException::new);
-		return member.getScripts();
+
+		return scriptRepository.findByAuthorWithSort(member, sortOption);
 	}
 
 	@Transactional
