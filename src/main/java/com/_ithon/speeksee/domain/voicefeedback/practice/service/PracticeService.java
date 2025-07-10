@@ -52,6 +52,7 @@ public class PracticeService {
 			throw new AccessDeniedException("본인의 연습 기록만 삭제할 수 있습니다.");
 		}
 
+		practice.getScript().decreasePracticeCount();
 		practiceRepository.delete(practice);
 	}
 }

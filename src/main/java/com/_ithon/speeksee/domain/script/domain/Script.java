@@ -50,4 +50,15 @@ public class Script extends BaseTimeEntity {
 	@Column(nullable = false)
 	@Builder.Default
 	private boolean isLevelTest = false; // 레벨 테스트용
+
+	@Column(nullable = false)
+	private int practiceCount;
+
+	public void increasePracticeCount() {
+		this.practiceCount += 1;
+	}
+
+	public void decreasePracticeCount() {
+		this.practiceCount = Math.max(0, this.practiceCount - 1);
+	}
 }

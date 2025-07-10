@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import com._ithon.speeksee.domain.script.domain.Script;
 
-public interface ScriptRepository extends JpaRepository<Script, Long> {
+public interface ScriptRepository extends JpaRepository<Script, Long>, ScriptRepositoryCustom {
 
 	@Query("SELECT s FROM Script s WHERE s.isLevelTest = true")
 	List<Script> findAllLevelTestScripts();

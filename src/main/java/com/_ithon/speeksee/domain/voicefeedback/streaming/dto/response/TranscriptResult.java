@@ -39,4 +39,6 @@ public class TranscriptResult {
 
 	@Schema(description = "정확도 비율 (0.0 ~ 1.0)", example = "0.8")
 	private Double accuracy;
+
+	private String type;
 }
