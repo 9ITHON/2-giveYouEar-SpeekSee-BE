@@ -2,6 +2,7 @@ package com._ithon.speeksee.domain.script.controller;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,8 @@ import com._ithon.speeksee.domain.member.entity.Member;
 import com._ithon.speeksee.domain.script.domain.Script;
 import com._ithon.speeksee.domain.script.domain.ScriptSortOption;
 import com._ithon.speeksee.domain.script.dto.response.ScriptResponse;
+import com._ithon.speeksee.domain.script.dto.response.ScriptsResponse;
+import com._ithon.speeksee.domain.script.dto.resquest.ScriptBatchSaveReq;
 import com._ithon.speeksee.domain.script.dto.resquest.ScriptGenerateRequest;
 import com._ithon.speeksee.domain.script.service.ScriptService;
 import com._ithon.speeksee.global.auth.model.CustomUserDetails;
@@ -72,6 +75,60 @@ public class ScriptController {
 		Script script = scriptService.createScript(request.getCategory(), request.getDifficulty(), member.getId());
 		return ApiRes.success(ScriptResponse.from(script));
 	}
+
+	@Operation(
+		summary = "스크립트 여러 개 일괄 등록",
+		description = """
+	프론트에서 여러 개의 스크립트를 한 번에 등록합니다.  
+	카테고리: `NEWS`, `WEATHER`, `SELF_INTRODUCTION`, `DAILY`  
+	난이도: `EASY`, `MEDIUM`, `HARD`  
+	`isLevelTest`가 true이면 레벨 테스트용 스크립트로 저장됩니다.
+	""",
+		responses = {
+			@ApiResponse(responseCode = "200", description = "스크립트 일괄 등록 성공", content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = ApiRes.class),
+				examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+					name = "성공 예시",
+					value = """
+						{
+						  "success": true,
+						  "data": [
+						    {
+						      "id": 1,
+						      "title": "자기소개",
+						      "content": "안녕하세요, 저는 ...",
+						      "category": "SELF_INTRODUCTION",
+						      "difficultyLevel": "MEDIUM",
+						      "isLevelTest": false,
+						      "practiceCount": 0,
+						      "createdAt": "2025-07-10T13:00:00",
+						      "updatedAt": "2025-07-10T13:00:00"
+						    },
+						    ...
+						  ],
+						  "message": "요청이 성공적으로 처리되었습니다.",
+						  "status": 200,
+						  "code": 0,
+						  "time": "2025-07-10T13:00:00"
+						}
+						"""
+				)
+			)),
+			@ApiResponse(responseCode = "400", description = "잘못된 요청 (유효성 검사 실패)"),
+			@ApiResponse(responseCode = "500", description = "서버 오류")
+		}
+	)
+	@PostMapping("/batch")
+	public ResponseEntity<ApiRes<List<ScriptsResponse>>> saveBatchScripts(
+		@Valid @RequestBody List<@Valid ScriptBatchSaveReq> requests,
+		@AuthenticationPrincipal CustomUserDetails user
+	) {
+		List<ScriptsResponse> result = scriptService.saveAll(requests, user.getMember());
+		return ResponseEntity.ok(ApiRes.success(result));
+	}
+
+
 
 	@GetMapping("/my")
 	public ApiRes<List<ScriptResponse>> getMyScripts(
