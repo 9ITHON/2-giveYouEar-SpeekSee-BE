@@ -3,6 +3,7 @@ package com._ithon.speeksee.domain.voicefeedback.streaming.infra.response;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -37,7 +38,6 @@ public class GoogleSttResponseObserver
 	private final List<String> scriptWords;
 	private final WebSocketErrorSender errorSender;
 	private final LevelTestProcessor levelTestProcessor;
-	private StreamController controller;
 
 	private final List<WordInfoDto> accumulatedWordInfos = new ArrayList<>();
 	private final StringBuilder accumulatedTranscript = new StringBuilder();
@@ -64,7 +64,6 @@ public class GoogleSttResponseObserver
 	@Override
 	public void onStart(StreamController controller) {
 		context.controller = controller;
-		this.controller = controller;
 		log.info("🎙 STT 스트리밍 시작: {}", session.getId());
 	}
 
@@ -148,7 +147,14 @@ public class GoogleSttResponseObserver
 
 		if (context.getMode() == PracticeMode.LEVEL_TEST && !context.levelTestProcessed) {
 			context.levelTestProcessed = true;
+			try {
+				String json = objectMapper.writeValueAsString(context.levelTestWordInfos);
+				log.info("[{}] LEVEL_TEST 누적 WordInfo 전체: {}", session.getId(), json);
+			} catch (Exception e) {
+				log.warn("[{}] LEVEL_TEST WordInfo 직렬화 실패", session.getId(), e);
+			}
 			levelTestProcessor.process(context.memberId, context.levelTestWordInfos);
+			context.levelTestWordInfos.clear();
 			log.info("레벨 테스트 완료 처리됨");
 		}
 		log.info("🎙 STT 스트리밍 종료: {}", session.getId());
@@ -161,50 +167,74 @@ public class GoogleSttResponseObserver
 	}
 
 	public void flushAccumulatedResults() {
-		if (accumulatedWordInfos.isEmpty()) return;
+		List<WordInfoDto> wordInfos;
+		String fullTranscript;
 
-		int correct = (int) accumulatedWordInfos.stream().filter(WordInfoDto::isCorrect).count();
-		int total = accumulatedWordInfos.size();
+		// [0] 모드에 따라 wordInfos, transcript 선택
+		if (context.getMode() == PracticeMode.LEVEL_TEST) {
+			if (context.levelTestWordInfos.isEmpty()) {
+				log.warn("[{}] LEVEL_TEST - 누적된 단어 없음 → flush 생략", session.getId());
+				return;
+			}
+			wordInfos = new ArrayList<>(context.levelTestWordInfos);
+			fullTranscript = wordInfos.stream()
+				.map(WordInfoDto::getWord)
+				.collect(Collectors.joining(" "))
+				.trim();
+		} else {
+			if (accumulatedWordInfos.isEmpty()) {
+				log.warn("[{}] NORMAL - 누적된 단어 없음 → flush 생략", session.getId());
+				return;
+			}
+			wordInfos = new ArrayList<>(accumulatedWordInfos);
+			fullTranscript = accumulatedTranscript.toString().trim();
+		}
+
+		// [1] 정확도 계산
+		int correct = (int) wordInfos.stream().filter(WordInfoDto::isCorrect).count();
+		int total = wordInfos.size();
 		double accuracy = total == 0 ? 0.0 : (double) correct / total;
-		String fullTranscript = accumulatedTranscript.toString().trim();
 
-		// [1] DB 저장
+		// [2] DB 저장
 		practiceSaveService.save(
 			context.getMemberId(),
 			context.getScriptId(),
 			fullTranscript,
 			accuracy,
-			accumulatedWordInfos
+			wordInfos
 		);
 
-		// [2] 최종 응답 전송
+		// [3] 최종 응답 전송
 		if (session != null && session.isOpen()) {
 			try {
 				TranscriptResult dto = TranscriptResult.builder()
 					.transcript(fullTranscript)
 					.confidence(1.0f)
 					.isFinal(true)
-					.words(new ArrayList<>(accumulatedWordInfos))
+					.words(wordInfos)
 					.correctCount(correct)
 					.totalCount(total)
 					.accuracy(accuracy)
 					.type("FINAL_FLUSH")
 					.build();
 
-				log.info("[{}] 최종 응답 DTO: {}", session.getId(), objectMapper.writeValueAsString(dto));
-				session.sendMessage(new TextMessage(objectMapper.writeValueAsString(dto)));
-				log.info("[{}] 최종 응답 전송 완료", session.getId());
+				String json = objectMapper.writeValueAsString(dto);
+				log.info("[{}] ✅ 최종 응답 DTO: {}", session.getId(), json);
+				session.sendMessage(new TextMessage(json));
+				log.info("[{}] ✅ 최종 응답 전송 완료", session.getId());
 
 			} catch (IOException e) {
-				log.error("[{}] 응답 전송 실패", session.getId(), e);
+				log.error("[{}] ❌ 응답 전송 실패", session.getId(), e);
 			}
 		} else {
 			log.warn("[{}] WebSocket 세션이 이미 닫혀 응답 전송 생략", session.getId());
 		}
 
-
-		// [3] 상태 초기화
-		accumulatedTranscript.setLength(0);
-		accumulatedWordInfos.clear();
+		// [4] 상태 초기화
+		if (context.getMode() == PracticeMode.LEVEL_TEST) {
+		} else {
+			accumulatedTranscript.setLength(0);
+			accumulatedWordInfos.clear();
+		}
 	}
 }

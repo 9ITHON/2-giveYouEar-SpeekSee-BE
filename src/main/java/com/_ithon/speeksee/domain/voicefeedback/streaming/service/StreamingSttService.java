@@ -39,7 +39,7 @@ public class StreamingSttService {
 	}
 
 	public void flushCurrentSentence(WebSocketSession session) {
-		log.info("[{}] 📨 flushCurrentSentence() 호출됨", session.getId());
+		log.info("[{}] flushCurrentSentence() 호출됨", session.getId());
 
 		SttSessionContext context = sessionManager.getSession(session.getId());
 		if (context == null) {
