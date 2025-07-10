@@ -1,9 +1,12 @@
 package com._ithon.speeksee.domain.voicefeedback.streaming.infra.session;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.web.socket.WebSocketSession;
 
+import com._ithon.speeksee.domain.voicefeedback.streaming.dto.response.WordInfoDto;
 import com.google.api.gax.rpc.ClientStream;
 import com.google.api.gax.rpc.StreamController;
 import com.google.cloud.speech.v1.SpeechClient;
@@ -25,6 +28,10 @@ public class SttSessionContext {
 	public ClientStream<StreamingRecognizeRequest> requestStream;
 	public StreamController controller;
 	public WebSocketSession session;
+	public String mode = "normal"; // 레벨 테스트 모드 여부
+
+	public List<WordInfoDto> levelTestWordInfos = new ArrayList<>(); // 레벨 테스트 시 누적된 단어 일치 정보
+	public boolean levelTestProcessed = false;
 
 	public AtomicInteger currentWordIndex = new AtomicInteger(0);
 
@@ -40,8 +47,10 @@ public class SttSessionContext {
 
 	public void closeResources() {
 		try {
-			if (requestStream != null) requestStream.closeSend(); // 요청 스트림만 닫는다
-			if (session != null && session.isOpen()) session.close(); // WebSocket만 닫는다
+			if (requestStream != null)
+				requestStream.closeSend(); // 요청 스트림만 닫는다
+			if (session != null && session.isOpen())
+				session.close(); // WebSocket만 닫는다
 		} catch (Exception e) {
 			log.warn("[{}] 리소스 종료 중 오류 발생", session != null ? session.getId() : "UNKNOWN", e);
 		}

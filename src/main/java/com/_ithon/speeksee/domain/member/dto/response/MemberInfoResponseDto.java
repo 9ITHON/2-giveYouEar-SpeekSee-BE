@@ -3,6 +3,7 @@ package com._ithon.speeksee.domain.member.dto.response;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com._ithon.speeksee.domain.member.entity.Level;
 import com._ithon.speeksee.domain.member.entity.Member;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -28,7 +29,7 @@ public class MemberInfoResponseDto {
 	private final LocalDate birthday;
 
 	@Schema(description = "현재 레벨", example = "초급")
-	private final String currentLevel;
+	private final Level currentLevel;
 
 	@Schema(description = "총 경험치", example = "1250")
 	private final Integer totalExp;
