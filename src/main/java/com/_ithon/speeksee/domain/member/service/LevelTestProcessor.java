@@ -44,6 +44,8 @@ public class LevelTestProcessor {
 			return;
 		}
 
+		log.info("📊 현재까지 받은 정확도 수: {} / {}", accuracyList.size(), LevelTestScriptNum);
+
 		if (accuracyList.size() == LevelTestScriptNum) {
 			double average = accuracyList.stream()
 				.mapToDouble(Double::doubleValue)
