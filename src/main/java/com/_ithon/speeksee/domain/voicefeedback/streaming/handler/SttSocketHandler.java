@@ -9,6 +9,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 
+import com._ithon.speeksee.domain.voicefeedback.practice.entity.PracticeMode;
 import com._ithon.speeksee.domain.voicefeedback.streaming.infra.session.AuthenticatedSession;
 import com._ithon.speeksee.domain.voicefeedback.streaming.service.StreamingSttService;
 import com._ithon.speeksee.global.auth.jwt.JwtTokenProvider;
@@ -72,31 +73,40 @@ public class SttSocketHandler extends BinaryWebSocketHandler {
 			JsonNode json = objectMapper.readTree(payload);
 
 			String type = json.get("type").asText();
-			if (!"AUTH".equals(type)) {
-				log.warn("[{}] 알 수 없는 메시지 타입: {}", session.getId(), type);
-				session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Invalid message type"));
-				return;
+
+			switch (type) {
+				case "AUTH" -> {
+					String token = json.get("token").asText().replace("Bearer ", "").trim();
+					Long memberId = json.get("memberId").asLong();
+					Long scriptId = json.get("scriptId").asLong();
+					String modeStr = json.has("mode") ? json.get("mode").asText() : "normal";
+					PracticeMode mode = PracticeMode.valueOf(modeStr.toUpperCase());
+
+					jwtTokenProvider.validateToken(token);
+					String email = jwtTokenProvider.getEmailFromToken(token);
+
+					AuthenticatedSession auth = new AuthenticatedSession(memberId, email, scriptId, mode);
+					session.getAttributes().put("auth", auth);
+
+					log.info("WebSocket 인증 성공: sessionId={}, memberId={}, email={}", session.getId(), memberId, email);
+					sttService.handleStart(session);
+					session.sendMessage(new TextMessage("{\"type\":\"AUTH_OK\",\"message\":\"인증 완료\"}"));
+				}
+
+				case "END_SENTENCE" -> {
+					sttService.flushCurrentSentence(session);
+				}
+
+				default -> {
+					log.warn("[{}] 알 수 없는 메시지 타입: {}", session.getId(), type);
+					session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Invalid message type"));
+				}
 			}
 
-			String token = json.get("token").asText().replace("Bearer ", "").trim();
-			Long memberId = json.get("memberId").asLong();
-			Long scriptId = json.get("scriptId").asLong();
-			String mode = json.has("mode") ? json.get("mode").asText() : "normal";
-
-			jwtTokenProvider.validateToken(token);
-			String email = jwtTokenProvider.getEmailFromToken(token);
-
-			AuthenticatedSession auth = new AuthenticatedSession(memberId, email, scriptId, mode);
-			session.getAttributes().put("auth", auth);
-
-			log.info("✅ WebSocket 인증 성공: sessionId={}, memberId={}, email={}", session.getId(), memberId, email);
-			sttService.handleStart(session);
-			session.sendMessage(new TextMessage("{\"type\":\"AUTH_OK\",\"message\":\"인증 완료\"}"));
-
 		} catch (Exception e) {
-			log.warn("❌ WebSocket 인증 실패: {}", e.getMessage());
+			log.warn("WebSocket 메시지 처리 실패: {}", e.getMessage());
 			try {
-				session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Invalid AUTH"));
+				session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Invalid Message"));
 			} catch (IOException ex) {
 				log.error("세션 종료 실패", ex);
 			}
