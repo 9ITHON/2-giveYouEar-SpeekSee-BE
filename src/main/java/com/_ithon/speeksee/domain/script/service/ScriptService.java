@@ -180,8 +180,8 @@ public class ScriptService {
 	}
 
 	@Transactional
-	public Script getLevelTestScript() {
-		List<Script> scripts = scriptRepository.findAllLevelTestScripts();
-		return scripts.get(new Random().nextInt(scripts.size()));
+	public List<Script> getLevelTestScript() {
+		List<Script> scripts = scriptRepository.find3ByIsLevelTestTrue();
+		return scripts;
 	}
 }

@@ -185,11 +185,14 @@ public class ScriptController {
 		return ApiRes.success(null, "대본이 성공적으로 삭제되었습니다.");
 	}
 
-	@Operation(summary = "레벨 테스트 스크립트 조회", description = "레벨 테스트용 정적 스크립트를 무작위로 반환합니다.")
+	@Operation(summary = "레벨 테스트 스크립트 조회", description = "3개의 대본을 랜덤으로 반환합니다.")
 	@GetMapping("/level-test")
-	public ApiRes<ScriptResponse> getLevelTestScript() {
-		Script script = scriptService.getLevelTestScript();
-		return ApiRes.success(ScriptResponse.from(script));
+	public ApiRes<List<ScriptResponse>> getLevelTestScript() {
+		List<Script> scripts = scriptService.getLevelTestScript();
+		List<ScriptResponse> responseList = scripts.stream()
+			.map(ScriptResponse::from) // 각 Script를 ScriptResponse로 변환
+			.toList();
+		return ApiRes.success(responseList);
 	}
 
 }
