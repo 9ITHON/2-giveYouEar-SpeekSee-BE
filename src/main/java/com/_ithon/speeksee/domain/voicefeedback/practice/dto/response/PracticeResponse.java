@@ -18,6 +18,7 @@ public class PracticeResponse {
 	private Long id;
 	private String transcript;
 	private double accuracy;
+	private Long scriptId;
 
 	private List<PracticeWordDto> words;
 
@@ -26,6 +27,7 @@ public class PracticeResponse {
 			.id(entity.getId())
 			.transcript(entity.getTranscript())
 			.accuracy(entity.getAccuracy())
+			.scriptId(entity.getScript().getId())
 			.words(
 				entity.getWordList().stream()
 					.map(word -> new PracticeWordDto(
