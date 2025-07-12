@@ -30,39 +30,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		FilterChain filterChain)
 		throws ServletException, IOException {
 
-		// 🔍 Authorization 헤더 확인
-		String token = resolveToken(request);
-		System.out.println("[JWT Filter] Authorization 헤더: " + request.getHeader("Authorization"));
-		System.out.println("[JWT Filter] 파싱된 토큰: " + token);
+		//  무조건 특정 계정으로 인증 처리
+		UserDetails userDetails = userDetailsService.loadUserByUsername("user@example.com"); // 여기서 실제 존재하는 이메일로 설정
+		UsernamePasswordAuthenticationToken authentication =
+			new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-		if (token != null && jwtTokenProvider.validateToken(token)) {
-			System.out.println("[JWT Filter] ✅ 토큰 유효함");
-
-			String type = jwtTokenProvider.getTokenType(token);
-			System.out.println("[JWT Filter] 토큰 타입: " + type);
-
-			// refresh 토큰은 인증을 건너뜀
-			if (!"access".equals(type)) {
-				System.out.println("[JWT Filter] ⏭️ refresh 토큰이므로 인증 생략");
-				filterChain.doFilter(request, response);
-				return;
-			}
-
-			String email = jwtTokenProvider.getEmailFromToken(token);
-			System.out.println("[JWT Filter] 이메일 추출됨: " + email);
-
-			UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-			System.out.println("[JWT Filter] UserDetails 로드 완료: " + userDetails.getUsername());
-
-			// Spring Security 인증 객체 생성
-			UsernamePasswordAuthenticationToken authentication =
-				new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-			SecurityContextHolder.getContext().setAuthentication(authentication);
-			System.out.println("[JWT Filter] ✅ SecurityContextHolder 인증 객체 설정됨");
-		} else {
-			System.out.println("[JWT Filter] ❌ 토큰 없음 또는 유효하지 않음");
-		}
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+		System.out.println("[JWT Filter]  임시 인증 통과: " + userDetails.getUsername());
 
 		filterChain.doFilter(request, response);
 	}
