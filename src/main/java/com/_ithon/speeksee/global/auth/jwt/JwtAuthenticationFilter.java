@@ -30,16 +30,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		FilterChain filterChain)
 		throws ServletException, IOException {
 
-		//  무조건 특정 계정으로 인증 처리
-		UserDetails userDetails = userDetailsService.loadUserByUsername("user@example.com"); // 여기서 실제 존재하는 이메일로 설정
+		// Always authenticate as a specific user (for emergency/demo only)
+		UserDetails userDetails = userDetailsService.loadUserByUsername("user@example.com"); // Change to a real email
 		UsernamePasswordAuthenticationToken authentication =
 			new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
 		SecurityContextHolder.getContext().setAuthentication(authentication);
-		System.out.println("[JWT Filter]  임시 인증 통과: " + userDetails.getUsername());
+		System.out.println("[JWT Filter] Temporary authentication passed: " + userDetails.getUsername());
 
 		filterChain.doFilter(request, response);
 	}
+
 
 	// Authorization 헤더에서 Bearer 토큰 추출
 	private String resolveToken(HttpServletRequest request) {
