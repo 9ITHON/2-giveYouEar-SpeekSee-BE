@@ -1,4 +1,29 @@
 ![포스터](https://github.com/Kimgyuilli/SpeekSee-BE/blob/main/image/1.png?raw=true)
+
+## 🎙️ AI 발음 훈련 플랫폼 - *Give-You-Ear*
+
+**혼자 말하기 연습이 어렵고, 실력 향상을 체감하기 힘든 사용자들을 위한**
+
+**AI 기반 자기주도형 발음 훈련 앱**
+
+### 🔍 배경 및 문제 인식
+
+- 코로나 이후 **비대면 수업과 마스크 착용** 등으로 인해 말하기 실습이 줄어들고, **스피치 자신감 저하**가 장기화됨
+- 특히 대학생·취준생 다수가 **공개 말하기 불안**과 **훈련 체감 부족**을 경험함
+
+### 🚫 기존 서비스의 한계
+
+- 기존 발음 앱은 **정적 대본**, **부정확한 피드백**, **개인화 부족**
+- 사용자의 수준과 목표에 맞춘 **지속 가능한 연습 시스템** 부재
+
+### ✅ SpeekSee의 해결방안
+
+- **AI 기반 맞춤형 대본 생성**
+- **STT 발음 분석 + 시각적 피드백**
+- **대시보드로 성장 시각화**
+- **발음 기호·애니메이션을 활용한 반복 학습 지원**
+
+
 ![팀 소개](https://github.com/Kimgyuilli/SpeekSee-BE/blob/main/image/6.png)
 ![팀 소개](https://github.com/Kimgyuilli/SpeekSee-BE/blob/main/image/7.png)
 ![BE 스택](https://github.com/Kimgyuilli/SpeekSee-BE/blob/main/image/12.png)
